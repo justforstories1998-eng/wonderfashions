@@ -1,11 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   Store, 
   Share2, 
-  CreditCard, 
   Truck,
   Save,
-  RotateCcw,
   Facebook,
   Twitter,
   Instagram,
@@ -15,7 +13,10 @@ import {
   Linkedin,
   Palette,
   Upload,
-  X
+  X,
+  AlertCircle,
+  CheckCircle,
+  Clock
 } from 'lucide-react';
 import { useSettings } from '../../context/SettingsContext';
 import { useToast } from '../../components/common/Toast';
@@ -25,34 +26,68 @@ const SettingsPage = () => {
   const { 
     settings, 
     socialMediaPlatforms,
-    updateStoreInfo, 
-    updateSocialMedia, 
-    updateShipping,
-    updateBranding,
-    loading 
+    saving,
+    lastSaved,
+    saveBrandingToServer,
+    saveStoreInfoToServer,
+    saveSocialMediaToServer,
+    saveShippingToServer
   } = useSettings();
   const toast = useToast();
 
-  const [activeTab, setActiveTab] = useState('branding'); // Default to branding
+  const [activeTab, setActiveTab] = useState('branding');
+  const [saveMessage, setSaveMessage] = useState(null);
   
   // Forms state
   const [storeForm, setStoreForm] = useState({
-    storeName: settings.storeName,
-    storeEmail: settings.storeEmail,
-    storePhone: settings.storePhone,
-    street: settings.storeAddress.street,
-    city: settings.storeAddress.city,
-    postcode: settings.storeAddress.postcode,
-    country: settings.storeAddress.country
+    storeName: '',
+    storeEmail: '',
+    storePhone: '',
+    street: '',
+    city: '',
+    postcode: '',
+    country: ''
   });
 
-  const [socialForm, setSocialForm] = useState(settings.socialMedia);
-  const [shippingForm, setShippingForm] = useState(settings.shipping);
-  const [brandingForm, setBrandingForm] = useState(settings.branding || {
+  const [socialForm, setSocialForm] = useState({});
+  const [shippingForm, setShippingForm] = useState({});
+  const [brandingForm, setBrandingForm] = useState({
     logo: null,
-    fallbackText: 'Wonder',
-    subText: 'Fashions'
+    fallbackText: '',
+    subText: ''
   });
+
+  // Initialize forms when settings load
+  useEffect(() => {
+    if (settings) {
+      setStoreForm({
+        storeName: settings.storeName || '',
+        storeEmail: settings.storeEmail || '',
+        storePhone: settings.storePhone || '',
+        street: settings.storeAddress?.street || '',
+        city: settings.storeAddress?.city || '',
+        postcode: settings.storeAddress?.postcode || '',
+        country: settings.storeAddress?.country || ''
+      });
+      setSocialForm(settings.socialMedia || {});
+      setShippingForm(settings.shipping || {});
+      setBrandingForm(settings.branding || {
+        logo: null,
+        fallbackText: 'Wonder',
+        subText: 'Fashions'
+      });
+    }
+  }, [settings]);
+
+  // Clear save message after 10 seconds
+  useEffect(() => {
+    if (saveMessage) {
+      const timer = setTimeout(() => {
+        setSaveMessage(null);
+      }, 10000);
+      return () => clearTimeout(timer);
+    }
+  }, [saveMessage]);
 
   // Handlers
   const handleStoreChange = (e) => {
@@ -72,7 +107,7 @@ const SettingsPage = () => {
 
   const handleShippingChange = (e) => {
     const { name, value } = e.target;
-    setShippingForm(prev => ({ ...prev, [name]: parseFloat(value) }));
+    setShippingForm(prev => ({ ...prev, [name]: parseFloat(value) || 0 }));
   };
 
   const handleBrandingChange = (e) => {
@@ -85,7 +120,7 @@ const SettingsPage = () => {
     const file = e.target.files[0];
     if (!file) return;
 
-    // Check size (limit to 500KB)
+    // Check size (limit to 500KB for Base64 storage)
     if (file.size > 500 * 1024) {
       toast.error('Image is too large. Please upload an image smaller than 500KB.');
       return;
@@ -103,8 +138,8 @@ const SettingsPage = () => {
   };
 
   // Save Functions
-  const saveStoreSettings = () => {
-    updateStoreInfo({
+  const saveStoreSettings = async () => {
+    const result = await saveStoreInfoToServer({
       storeName: storeForm.storeName,
       storeEmail: storeForm.storeEmail,
       storePhone: storeForm.storePhone,
@@ -115,24 +150,50 @@ const SettingsPage = () => {
         country: storeForm.country
       }
     });
-    toast.success('Store information updated successfully');
+
+    if (result.success) {
+      toast.success('Store information saved!');
+      setSaveMessage({ type: 'success', text: result.message });
+    } else {
+      toast.error(result.message);
+      setSaveMessage({ type: 'error', text: result.message });
+    }
   };
 
-  const saveSocialSettings = () => {
-    updateSocialMedia(socialForm);
-    toast.success('Social media settings updated successfully');
+  const saveSocialSettings = async () => {
+    const result = await saveSocialMediaToServer(socialForm);
+
+    if (result.success) {
+      toast.success('Social media settings saved!');
+      setSaveMessage({ type: 'success', text: result.message });
+    } else {
+      toast.error(result.message);
+      setSaveMessage({ type: 'error', text: result.message });
+    }
   };
 
-  const saveShippingSettings = () => {
-    updateShipping(shippingForm);
-    toast.success('Shipping settings updated successfully');
+  const saveShippingSettings = async () => {
+    const result = await saveShippingToServer(shippingForm);
+
+    if (result.success) {
+      toast.success('Shipping settings saved!');
+      setSaveMessage({ type: 'success', text: result.message });
+    } else {
+      toast.error(result.message);
+      setSaveMessage({ type: 'error', text: result.message });
+    }
   };
 
-  const saveBrandingSettings = () => {
-    updateBranding(brandingForm);
-    toast.success('Branding settings updated successfully');
-    // Force reload to update logo everywhere immediately if needed
-    // window.location.reload(); 
+  const saveBrandingSettings = async () => {
+    const result = await saveBrandingToServer(brandingForm);
+
+    if (result.success) {
+      toast.success('Branding settings saved!');
+      setSaveMessage({ type: 'success', text: result.message });
+    } else {
+      toast.error(result.message);
+      setSaveMessage({ type: 'error', text: result.message });
+    }
   };
 
   // Icon mapping
@@ -169,6 +230,43 @@ const SettingsPage = () => {
         <p className="text-secondary-500">Manage your store configuration</p>
       </div>
 
+      {/* Save Message Banner */}
+      {saveMessage && (
+        <div 
+          className={`p-4 rounded-lg flex items-start gap-3 animate-fade-in ${
+            saveMessage.type === 'success' 
+              ? 'bg-green-50 border border-green-200' 
+              : 'bg-red-50 border border-red-200'
+          }`}
+        >
+          {saveMessage.type === 'success' ? (
+            <CheckCircle className="text-green-500 flex-shrink-0 mt-0.5" size={20} />
+          ) : (
+            <AlertCircle className="text-red-500 flex-shrink-0 mt-0.5" size={20} />
+          )}
+          <div className="flex-1">
+            <p className={`font-medium ${saveMessage.type === 'success' ? 'text-green-800' : 'text-red-800'}`}>
+              {saveMessage.type === 'success' ? 'Settings Saved!' : 'Error Saving Settings'}
+            </p>
+            <p className={`text-sm ${saveMessage.type === 'success' ? 'text-green-700' : 'text-red-700'}`}>
+              {saveMessage.text}
+            </p>
+            {saveMessage.type === 'success' && (
+              <div className="flex items-center gap-2 mt-2 text-sm text-green-600">
+                <Clock size={14} />
+                <span>Site will auto-rebuild. Changes visible in 1-2 minutes.</span>
+              </div>
+            )}
+          </div>
+          <button 
+            onClick={() => setSaveMessage(null)}
+            className="text-secondary-400 hover:text-secondary-600"
+          >
+            <X size={18} />
+          </button>
+        </div>
+      )}
+
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
         {/* Sidebar Navigation */}
         <div className="lg:col-span-1">
@@ -178,6 +276,16 @@ const SettingsPage = () => {
             <TabButton id="social" label="Social Media" icon={Share2} />
             <TabButton id="shipping" label="Shipping & Delivery" icon={Truck} />
           </nav>
+
+          {/* Last Saved Info */}
+          {lastSaved && (
+            <div className="mt-4 p-3 bg-secondary-50 rounded-lg text-xs text-secondary-500">
+              <p>Last saved:</p>
+              <p className="font-medium text-secondary-700">
+                {new Date(lastSaved).toLocaleString()}
+              </p>
+            </div>
+          )}
         </div>
 
         {/* Content Area */}
@@ -227,7 +335,7 @@ const SettingsPage = () => {
                         <div className="flex flex-col items-center justify-center pt-5 pb-6">
                           <Upload className="w-8 h-8 mb-3 text-secondary-400" />
                           <p className="mb-2 text-sm text-secondary-500"><span className="font-semibold">Click to upload</span></p>
-                          <p className="text-xs text-secondary-500">PNG, JPG or GIF</p>
+                          <p className="text-xs text-secondary-500">PNG, JPG or GIF (max 500KB)</p>
                         </div>
                         <input 
                           type="file" 
@@ -272,9 +380,10 @@ const SettingsPage = () => {
                   variant="primary" 
                   onClick={saveBrandingSettings}
                   icon={Save}
-                  loading={loading}
+                  loading={saving}
+                  disabled={saving}
                 >
-                  Save Branding
+                  {saving ? 'Saving...' : 'Save Branding'}
                 </Button>
               </div>
             </div>
@@ -374,9 +483,10 @@ const SettingsPage = () => {
                   variant="primary" 
                   onClick={saveStoreSettings}
                   icon={Save}
-                  loading={loading}
+                  loading={saving}
+                  disabled={saving}
                 >
-                  Save Changes
+                  {saving ? 'Saving...' : 'Save Changes'}
                 </Button>
               </div>
             </div>
@@ -451,9 +561,10 @@ const SettingsPage = () => {
                   variant="primary" 
                   onClick={saveSocialSettings}
                   icon={Save}
-                  loading={loading}
+                  loading={saving}
+                  disabled={saving}
                 >
-                  Save Changes
+                  {saving ? 'Saving...' : 'Save Changes'}
                 </Button>
               </div>
             </div>
@@ -472,7 +583,7 @@ const SettingsPage = () => {
                   <input
                     type="number"
                     name="standardShippingCost"
-                    value={shippingForm.standardShippingCost}
+                    value={shippingForm.standardShippingCost || 0}
                     onChange={handleShippingChange}
                     step="0.01"
                     min="0"
@@ -486,7 +597,7 @@ const SettingsPage = () => {
                   <input
                     type="number"
                     name="expressShippingCost"
-                    value={shippingForm.expressShippingCost}
+                    value={shippingForm.expressShippingCost || 0}
                     onChange={handleShippingChange}
                     step="0.01"
                     min="0"
@@ -500,7 +611,7 @@ const SettingsPage = () => {
                   <input
                     type="number"
                     name="freeShippingThreshold"
-                    value={shippingForm.freeShippingThreshold}
+                    value={shippingForm.freeShippingThreshold || 0}
                     onChange={handleShippingChange}
                     step="1"
                     min="0"
@@ -515,9 +626,10 @@ const SettingsPage = () => {
                   variant="primary" 
                   onClick={saveShippingSettings}
                   icon={Save}
-                  loading={loading}
+                  loading={saving}
+                  disabled={saving}
                 >
-                  Save Changes
+                  {saving ? 'Saving...' : 'Save Changes'}
                 </Button>
               </div>
             </div>

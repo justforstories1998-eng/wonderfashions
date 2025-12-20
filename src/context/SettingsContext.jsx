@@ -1,12 +1,13 @@
-import React, { createContext, useContext, useReducer, useEffect } from 'react';
-import { useLocalStorage } from '../hooks/useLocalStorage';
+import React, { createContext, useContext, useReducer, useEffect, useState } from 'react';
 import { initialSettings, socialMediaPlatforms } from '../data/settings';
 
 // Initial state
 const initialState = {
   settings: initialSettings,
-  loading: false,
-  error: null
+  loading: true,
+  saving: false,
+  error: null,
+  lastSaved: null
 };
 
 // Action types
@@ -19,7 +20,9 @@ const SETTINGS_ACTIONS = {
   UPDATE_BRANDING: 'UPDATE_BRANDING',
   RESET_SETTINGS: 'RESET_SETTINGS',
   SET_LOADING: 'SET_LOADING',
-  SET_ERROR: 'SET_ERROR'
+  SET_SAVING: 'SET_SAVING',
+  SET_ERROR: 'SET_ERROR',
+  SET_LAST_SAVED: 'SET_LAST_SAVED'
 };
 
 // Reducer function
@@ -109,11 +112,26 @@ const settingsReducer = (state, action) => {
       };
     }
 
+    case SETTINGS_ACTIONS.SET_SAVING: {
+      return {
+        ...state,
+        saving: action.payload
+      };
+    }
+
     case SETTINGS_ACTIONS.SET_ERROR: {
       return {
         ...state,
         error: action.payload,
-        loading: false
+        loading: false,
+        saving: false
+      };
+    }
+
+    case SETTINGS_ACTIONS.SET_LAST_SAVED: {
+      return {
+        ...state,
+        lastSaved: action.payload
       };
     }
 
@@ -127,41 +145,103 @@ const SettingsContext = createContext();
 
 // Provider component
 export const SettingsProvider = ({ children }) => {
-  const [savedSettings, setSavedSettings] = useLocalStorage(
-    'wonderfashions_settings',
-    initialSettings
-  );
   const [state, dispatch] = useReducer(settingsReducer, initialState);
+  const [isInitialized, setIsInitialized] = useState(false);
 
-  // Load settings from localStorage on mount
+  // Fetch settings from public/settings.json on mount
   useEffect(() => {
-    dispatch({ type: SETTINGS_ACTIONS.SET_LOADING, payload: true });
-    try {
-      // Merge saved settings with initial settings to handle new fields
-      const mergedSettings = {
-        ...initialSettings,
-        ...savedSettings,
-        branding: {
-          ...initialSettings.branding,
-          ...savedSettings.branding
-        },
-        socialMedia: {
-          ...initialSettings.socialMedia,
-          ...savedSettings.socialMedia
+    const fetchSettings = async () => {
+      dispatch({ type: SETTINGS_ACTIONS.SET_LOADING, payload: true });
+      
+      try {
+        // Add cache-busting query parameter
+        const response = await fetch(`/settings.json?t=${Date.now()}`);
+        
+        if (response.ok) {
+          const data = await response.json();
+          
+          // Merge with initial settings to handle any new fields
+          const mergedSettings = {
+            ...initialSettings,
+            ...data,
+            branding: {
+              ...initialSettings.branding,
+              ...data.branding
+            },
+            socialMedia: {
+              ...initialSettings.socialMedia,
+              ...data.socialMedia
+            },
+            shipping: {
+              ...initialSettings.shipping,
+              ...data.shipping
+            },
+            tax: {
+              ...initialSettings.tax,
+              ...data.tax
+            },
+            storeAddress: {
+              ...initialSettings.storeAddress,
+              ...data.storeAddress
+            }
+          };
+          
+          dispatch({ type: SETTINGS_ACTIONS.LOAD_SETTINGS, payload: mergedSettings });
+        } else {
+          // If fetch fails, use initial settings
+          console.warn('Could not fetch settings, using defaults');
+          dispatch({ type: SETTINGS_ACTIONS.LOAD_SETTINGS, payload: initialSettings });
         }
-      };
-      dispatch({ type: SETTINGS_ACTIONS.LOAD_SETTINGS, payload: mergedSettings });
-    } catch (error) {
-      dispatch({ type: SETTINGS_ACTIONS.SET_ERROR, payload: error.message });
-    }
+      } catch (error) {
+        console.error('Error fetching settings:', error);
+        dispatch({ type: SETTINGS_ACTIONS.LOAD_SETTINGS, payload: initialSettings });
+      } finally {
+        setIsInitialized(true);
+      }
+    };
+
+    fetchSettings();
   }, []);
 
-  // Save settings to localStorage whenever they change
-  useEffect(() => {
-    if (state.settings) {
-      setSavedSettings(state.settings);
+  // Save settings to GitHub via Netlify function
+  const saveSettingsToServer = async (settingsToSave) => {
+    dispatch({ type: SETTINGS_ACTIONS.SET_SAVING, payload: true });
+    dispatch({ type: SETTINGS_ACTIONS.SET_ERROR, payload: null });
+
+    try {
+      const response = await fetch('/api/update-settings', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(settingsToSave),
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.error || 'Failed to save settings');
+      }
+
+      dispatch({ type: SETTINGS_ACTIONS.SET_LAST_SAVED, payload: new Date().toISOString() });
+      dispatch({ type: SETTINGS_ACTIONS.SET_SAVING, payload: false });
+
+      return { 
+        success: true, 
+        message: result.message || 'Settings saved! Changes will be live in 1-2 minutes.' 
+      };
+
+    } catch (error) {
+      console.error('Error saving settings:', error);
+      dispatch({ type: SETTINGS_ACTIONS.SET_ERROR, payload: error.message });
+      dispatch({ type: SETTINGS_ACTIONS.SET_SAVING, payload: false });
+
+      return { 
+        success: false, 
+        message: error.message || 'Failed to save settings' 
+      };
     }
-  }, [state.settings, setSavedSettings]);
+  };
 
   // Action functions
   const updateSettings = (newSettings) => {
@@ -198,6 +278,60 @@ export const SettingsProvider = ({ children }) => {
 
   const resetSettings = () => {
     dispatch({ type: SETTINGS_ACTIONS.RESET_SETTINGS });
+  };
+
+  // Save all current settings to server
+  const saveAllSettings = async () => {
+    return await saveSettingsToServer(state.settings);
+  };
+
+  // Save specific section and update server
+  const saveBrandingToServer = async (brandingData) => {
+    const updatedSettings = {
+      ...state.settings,
+      branding: {
+        ...state.settings.branding,
+        ...brandingData
+      }
+    };
+    dispatch({ type: SETTINGS_ACTIONS.UPDATE_BRANDING, payload: brandingData });
+    return await saveSettingsToServer(updatedSettings);
+  };
+
+  const saveStoreInfoToServer = async (storeData) => {
+    const updatedSettings = {
+      ...state.settings,
+      storeName: storeData.storeName || state.settings.storeName,
+      storeEmail: storeData.storeEmail || state.settings.storeEmail,
+      storePhone: storeData.storePhone || state.settings.storePhone,
+      storeAddress: storeData.storeAddress || state.settings.storeAddress
+    };
+    dispatch({ type: SETTINGS_ACTIONS.UPDATE_STORE_INFO, payload: storeData });
+    return await saveSettingsToServer(updatedSettings);
+  };
+
+  const saveSocialMediaToServer = async (socialData) => {
+    const updatedSettings = {
+      ...state.settings,
+      socialMedia: {
+        ...state.settings.socialMedia,
+        ...socialData
+      }
+    };
+    dispatch({ type: SETTINGS_ACTIONS.UPDATE_SOCIAL_MEDIA, payload: socialData });
+    return await saveSettingsToServer(updatedSettings);
+  };
+
+  const saveShippingToServer = async (shippingData) => {
+    const updatedSettings = {
+      ...state.settings,
+      shipping: {
+        ...state.settings.shipping,
+        ...shippingData
+      }
+    };
+    dispatch({ type: SETTINGS_ACTIONS.UPDATE_SHIPPING, payload: shippingData });
+    return await saveSettingsToServer(updatedSettings);
   };
 
   // Getters
@@ -237,8 +371,12 @@ export const SettingsProvider = ({ children }) => {
   const value = {
     settings: state.settings,
     loading: state.loading,
+    saving: state.saving,
     error: state.error,
+    lastSaved: state.lastSaved,
+    isInitialized,
     socialMediaPlatforms,
+    // Local updates (don't save to server)
     updateSettings,
     updateSocialMedia,
     updateSingleSocialMedia,
@@ -246,6 +384,13 @@ export const SettingsProvider = ({ children }) => {
     updateShipping,
     updateBranding,
     resetSettings,
+    // Server saves
+    saveAllSettings,
+    saveBrandingToServer,
+    saveStoreInfoToServer,
+    saveSocialMediaToServer,
+    saveShippingToServer,
+    // Getters
     getSocialMediaLinks,
     getCurrency,
     formatPrice,
