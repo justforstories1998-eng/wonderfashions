@@ -1,4 +1,11 @@
 export const initialSettings = {
+  // Branding
+  branding: {
+    logo: null, // Will store Base64 string
+    fallbackText: 'Wonder',
+    subText: 'Fashions'
+  },
+
   // Store Information
   storeName: 'Wonder Fashions',
   storeEmail: 'hello@wonderfashions.com',

@@ -1,9 +1,11 @@
 import React from 'react';
 import { Menu, Bell, Search, User, ChevronDown } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
+import { useSettings } from '../../context/SettingsContext';
 
 const AdminHeader = ({ onSidebarOpen }) => {
   const { admin } = useAuth();
+  const { settings } = useSettings();
 
   return (
     <header className="bg-white border-b border-secondary-200 h-16 sticky top-0 z-20 px-4 sm:px-6">

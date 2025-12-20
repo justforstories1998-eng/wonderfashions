@@ -11,8 +11,11 @@ import {
   Instagram,
   Youtube,
   Music,
-  Image,
-  Linkedin
+  Image as ImageIcon,
+  Linkedin,
+  Palette,
+  Upload,
+  X
 } from 'lucide-react';
 import { useSettings } from '../../context/SettingsContext';
 import { useToast } from '../../components/common/Toast';
@@ -25,11 +28,14 @@ const SettingsPage = () => {
     updateStoreInfo, 
     updateSocialMedia, 
     updateShipping,
+    updateBranding,
     loading 
   } = useSettings();
   const toast = useToast();
 
-  const [activeTab, setActiveTab] = useState('store');
+  const [activeTab, setActiveTab] = useState('branding'); // Default to branding
+  
+  // Forms state
   const [storeForm, setStoreForm] = useState({
     storeName: settings.storeName,
     storeEmail: settings.storeEmail,
@@ -41,9 +47,14 @@ const SettingsPage = () => {
   });
 
   const [socialForm, setSocialForm] = useState(settings.socialMedia);
-  
   const [shippingForm, setShippingForm] = useState(settings.shipping);
+  const [brandingForm, setBrandingForm] = useState(settings.branding || {
+    logo: null,
+    fallbackText: 'Wonder',
+    subText: 'Fashions'
+  });
 
+  // Handlers
   const handleStoreChange = (e) => {
     const { name, value } = e.target;
     setStoreForm(prev => ({ ...prev, [name]: value }));
@@ -64,6 +75,34 @@ const SettingsPage = () => {
     setShippingForm(prev => ({ ...prev, [name]: parseFloat(value) }));
   };
 
+  const handleBrandingChange = (e) => {
+    const { name, value } = e.target;
+    setBrandingForm(prev => ({ ...prev, [name]: value }));
+  };
+
+  // Image Upload Handler
+  const handleLogoUpload = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    // Check size (limit to 500KB)
+    if (file.size > 500 * 1024) {
+      toast.error('Image is too large. Please upload an image smaller than 500KB.');
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setBrandingForm(prev => ({ ...prev, logo: reader.result }));
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const removeLogo = () => {
+    setBrandingForm(prev => ({ ...prev, logo: null }));
+  };
+
+  // Save Functions
   const saveStoreSettings = () => {
     updateStoreInfo({
       storeName: storeForm.storeName,
@@ -89,6 +128,13 @@ const SettingsPage = () => {
     toast.success('Shipping settings updated successfully');
   };
 
+  const saveBrandingSettings = () => {
+    updateBranding(brandingForm);
+    toast.success('Branding settings updated successfully');
+    // Force reload to update logo everywhere immediately if needed
+    // window.location.reload(); 
+  };
+
   // Icon mapping
   const socialIcons = {
     facebook: Facebook,
@@ -96,9 +142,24 @@ const SettingsPage = () => {
     instagram: Instagram,
     youtube: Youtube,
     tiktok: Music,
-    pinterest: Image,
+    pinterest: ImageIcon,
     linkedin: Linkedin
   };
+
+  // Tab Button Component
+  const TabButton = ({ id, label, icon: Icon }) => (
+    <button
+      onClick={() => setActiveTab(id)}
+      className={`w-full flex items-center gap-3 px-4 py-3 text-left transition-colors border-l-4 ${
+        activeTab === id
+          ? 'bg-primary-50 text-primary-700 border-primary-600 font-medium'
+          : 'text-secondary-600 hover:bg-secondary-50 border-transparent'
+      }`}
+    >
+      <Icon size={20} />
+      {label}
+    </button>
+  );
 
   return (
     <div className="space-y-6">
@@ -112,47 +173,116 @@ const SettingsPage = () => {
         {/* Sidebar Navigation */}
         <div className="lg:col-span-1">
           <nav className="bg-white rounded-xl shadow-sm border border-secondary-100 overflow-hidden">
-            <button
-              onClick={() => setActiveTab('store')}
-              className={`w-full flex items-center gap-3 px-4 py-3 text-left transition-colors border-l-4 ${
-                activeTab === 'store'
-                  ? 'bg-primary-50 text-primary-700 border-primary-600 font-medium'
-                  : 'text-secondary-600 hover:bg-secondary-50 border-transparent'
-              }`}
-            >
-              <Store size={20} />
-              Store Information
-            </button>
-            <button
-              onClick={() => setActiveTab('social')}
-              className={`w-full flex items-center gap-3 px-4 py-3 text-left transition-colors border-l-4 ${
-                activeTab === 'social'
-                  ? 'bg-primary-50 text-primary-700 border-primary-600 font-medium'
-                  : 'text-secondary-600 hover:bg-secondary-50 border-transparent'
-              }`}
-            >
-              <Share2 size={20} />
-              Social Media
-            </button>
-            <button
-              onClick={() => setActiveTab('shipping')}
-              className={`w-full flex items-center gap-3 px-4 py-3 text-left transition-colors border-l-4 ${
-                activeTab === 'shipping'
-                  ? 'bg-primary-50 text-primary-700 border-primary-600 font-medium'
-                  : 'text-secondary-600 hover:bg-secondary-50 border-transparent'
-              }`}
-            >
-              <Truck size={20} />
-              Shipping & Delivery
-            </button>
+            <TabButton id="branding" label="Branding & Logo" icon={Palette} />
+            <TabButton id="store" label="Store Information" icon={Store} />
+            <TabButton id="social" label="Social Media" icon={Share2} />
+            <TabButton id="shipping" label="Shipping & Delivery" icon={Truck} />
           </nav>
         </div>
 
         {/* Content Area */}
         <div className="lg:col-span-3">
+          
+          {/* Branding Tab */}
+          {activeTab === 'branding' && (
+            <div className="bg-white rounded-xl shadow-sm border border-secondary-100 p-6 space-y-6 animate-fade-in">
+              <div>
+                <h2 className="text-lg font-semibold text-secondary-900 mb-4 pb-2 border-b border-secondary-100">
+                  Store Branding
+                </h2>
+                
+                {/* Logo Upload */}
+                <div className="mb-8">
+                  <label className="label">Store Logo</label>
+                  <p className="text-xs text-secondary-500 mb-3">
+                    Upload your store logo. Recommended size: 200x200px. Max size: 500KB.
+                  </p>
+                  
+                  <div className="flex items-start gap-6">
+                    {/* Preview */}
+                    <div className="relative w-32 h-32 bg-secondary-50 border-2 border-dashed border-secondary-300 rounded-xl flex items-center justify-center overflow-hidden">
+                      {brandingForm.logo ? (
+                        <>
+                          <img 
+                            src={brandingForm.logo} 
+                            alt="Store Logo" 
+                            className="w-full h-full object-contain p-2" 
+                          />
+                          <button
+                            onClick={removeLogo}
+                            className="absolute top-1 right-1 p-1 bg-white rounded-full shadow-sm hover:bg-red-50 text-secondary-500 hover:text-red-500 transition-colors"
+                            type="button"
+                          >
+                            <X size={14} />
+                          </button>
+                        </>
+                      ) : (
+                        <ImageIcon className="text-secondary-300" size={32} />
+                      )}
+                    </div>
+
+                    {/* Upload Button */}
+                    <div className="flex-1">
+                      <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-secondary-300 border-dashed rounded-xl cursor-pointer bg-secondary-50 hover:bg-secondary-100 transition-colors">
+                        <div className="flex flex-col items-center justify-center pt-5 pb-6">
+                          <Upload className="w-8 h-8 mb-3 text-secondary-400" />
+                          <p className="mb-2 text-sm text-secondary-500"><span className="font-semibold">Click to upload</span></p>
+                          <p className="text-xs text-secondary-500">PNG, JPG or GIF</p>
+                        </div>
+                        <input 
+                          type="file" 
+                          className="hidden" 
+                          accept="image/*"
+                          onChange={handleLogoUpload}
+                        />
+                      </label>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Text Fallback */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-1">
+                    <label className="label">Brand Name (Main)</label>
+                    <input
+                      type="text"
+                      name="fallbackText"
+                      value={brandingForm.fallbackText}
+                      onChange={handleBrandingChange}
+                      className="input"
+                      placeholder="Wonder"
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <label className="label">Brand Subtext (Optional)</label>
+                    <input
+                      type="text"
+                      name="subText"
+                      value={brandingForm.subText}
+                      onChange={handleBrandingChange}
+                      className="input"
+                      placeholder="Fashions"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex justify-end pt-4">
+                <Button 
+                  variant="primary" 
+                  onClick={saveBrandingSettings}
+                  icon={Save}
+                  loading={loading}
+                >
+                  Save Branding
+                </Button>
+              </div>
+            </div>
+          )}
+
           {/* Store Information Tab */}
           {activeTab === 'store' && (
-            <div className="bg-white rounded-xl shadow-sm border border-secondary-100 p-6 space-y-6">
+            <div className="bg-white rounded-xl shadow-sm border border-secondary-100 p-6 space-y-6 animate-fade-in">
               <div>
                 <h2 className="text-lg font-semibold text-secondary-900 mb-4 pb-2 border-b border-secondary-100">
                   General Information
@@ -254,7 +384,7 @@ const SettingsPage = () => {
 
           {/* Social Media Tab */}
           {activeTab === 'social' && (
-            <div className="bg-white rounded-xl shadow-sm border border-secondary-100 p-6 space-y-6">
+            <div className="bg-white rounded-xl shadow-sm border border-secondary-100 p-6 space-y-6 animate-fade-in">
               <h2 className="text-lg font-semibold text-secondary-900 mb-4 pb-2 border-b border-secondary-100">
                 Social Media Links
               </h2>
@@ -331,7 +461,7 @@ const SettingsPage = () => {
 
           {/* Shipping Tab */}
           {activeTab === 'shipping' && (
-            <div className="bg-white rounded-xl shadow-sm border border-secondary-100 p-6 space-y-6">
+            <div className="bg-white rounded-xl shadow-sm border border-secondary-100 p-6 space-y-6 animate-fade-in">
               <h2 className="text-lg font-semibold text-secondary-900 mb-4 pb-2 border-b border-secondary-100">
                 Shipping Configuration
               </h2>

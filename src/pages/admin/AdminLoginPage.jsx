@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { Mail, Lock, Eye, EyeOff, LogIn, ArrowLeft } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
+import { useSettings } from '../../context/SettingsContext';
 import { useToast } from '../../components/common/Toast';
 import Button from '../../components/common/Button';
 
@@ -9,6 +10,7 @@ const AdminLoginPage = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { login, isAuthenticated, error, clearError, loading } = useAuth();
+  const { settings } = useSettings();
   const toast = useToast();
 
   const [formData, setFormData] = useState({
@@ -96,12 +98,24 @@ const AdminLoginPage = () => {
         
         {/* Content */}
         <div className="relative flex flex-col justify-center items-center w-full px-12 text-center">
-          <div className="w-20 h-20 bg-white rounded-2xl flex items-center justify-center mb-8 shadow-xl">
-            <span className="text-4xl font-bold text-primary-600">W</span>
-          </div>
+          {settings.branding?.logo ? (
+            <div className="w-32 h-32 bg-white rounded-2xl flex items-center justify-center mb-8 shadow-xl p-4 overflow-hidden">
+              <img 
+                src={settings.branding.logo} 
+                alt={settings.storeName} 
+                className="w-full h-full object-contain" 
+              />
+            </div>
+          ) : (
+            <div className="w-20 h-20 bg-white rounded-2xl flex items-center justify-center mb-8 shadow-xl">
+              <span className="text-4xl font-bold text-primary-600">
+                {settings.branding?.fallbackText?.[0] || 'W'}
+              </span>
+            </div>
+          )}
           
           <h1 className="text-4xl font-display font-bold text-white mb-4">
-            Wonder Fashions
+            {settings.storeName || 'Wonder Fashions'}
           </h1>
           
           <p className="text-xl text-white/80 mb-8 max-w-md">
@@ -132,11 +146,25 @@ const AdminLoginPage = () => {
 
           {/* Mobile Logo */}
           <div className="lg:hidden flex items-center gap-3 mb-8">
-            <div className="w-12 h-12 bg-primary-600 rounded-xl flex items-center justify-center">
-              <span className="text-2xl font-bold text-white">W</span>
-            </div>
+            {settings.branding?.logo ? (
+              <div className="w-16 h-16 bg-white border border-secondary-200 rounded-xl flex items-center justify-center overflow-hidden p-2">
+                <img 
+                  src={settings.branding.logo} 
+                  alt={settings.storeName} 
+                  className="w-full h-full object-contain" 
+                />
+              </div>
+            ) : (
+              <div className="w-12 h-12 bg-primary-600 rounded-xl flex items-center justify-center">
+                <span className="text-2xl font-bold text-white">
+                  {settings.branding?.fallbackText?.[0] || 'W'}
+                </span>
+              </div>
+            )}
             <div>
-              <h1 className="text-xl font-display font-bold text-secondary-900">Wonder Fashions</h1>
+              <h1 className="text-xl font-display font-bold text-secondary-900">
+                {settings.storeName || 'Wonder Fashions'}
+              </h1>
               <p className="text-xs text-secondary-500">Admin Panel</p>
             </div>
           </div>
@@ -259,7 +287,7 @@ const AdminLoginPage = () => {
 
           {/* Footer */}
           <p className="text-center text-secondary-500 text-sm mt-8">
-            &copy; {new Date().getFullYear()} Wonder Fashions. All rights reserved.
+            &copy; {new Date().getFullYear()} {settings.storeName || 'Wonder Fashions'}. All rights reserved.
           </p>
         </div>
       </div>

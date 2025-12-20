@@ -10,10 +10,12 @@ import {
   X
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
+import { useSettings } from '../../context/SettingsContext';
 import { ConfirmModal } from '../common/Modal';
 
 const AdminSidebar = ({ isOpen, onClose }) => {
   const { logout } = useAuth();
+  const { settings } = useSettings();
   const navigate = useNavigate();
   const [showLogoutConfirm, setShowLogoutConfirm] = React.useState(false);
 
@@ -66,11 +68,22 @@ const AdminSidebar = ({ isOpen, onClose }) => {
         {/* Header */}
         <div className="h-16 flex items-center justify-between px-6 border-b border-secondary-200">
           <div className="flex items-center gap-2">
-            <div className="w-8 h-8 bg-primary-600 rounded-lg flex items-center justify-center">
-              <span className="text-white font-bold text-lg">W</span>
-            </div>
-            <span className="font-display font-bold text-lg text-secondary-900">
-              Admin Panel
+            {settings.branding?.logo ? (
+              <img 
+                src={settings.branding.logo} 
+                alt={settings.storeName} 
+                className="h-8 w-auto object-contain" 
+              />
+            ) : (
+              <div className="w-8 h-8 bg-primary-600 rounded-lg flex items-center justify-center">
+                <span className="text-white font-bold text-lg">
+                  {settings.branding?.fallbackText?.[0] || 'W'}
+                </span>
+              </div>
+            )}
+            
+            <span className="font-display font-bold text-lg text-secondary-900 truncate max-w-[120px]">
+              {settings.storeName || 'Admin Panel'}
             </span>
           </div>
           

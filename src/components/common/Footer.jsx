@@ -108,16 +108,29 @@ const Footer = () => {
           {/* Brand Section */}
           <div className="lg:col-span-2">
             <Link to="/" className="flex items-center gap-2 mb-4">
-              <div className="w-10 h-10 bg-gradient-to-br from-primary-500 to-primary-700 rounded-lg flex items-center justify-center">
-                <span className="text-white font-bold text-xl">W</span>
-              </div>
+              {settings.branding?.logo ? (
+                <img 
+                  src={settings.branding.logo} 
+                  alt={settings.storeName} 
+                  className="h-10 w-auto object-contain brightness-0 invert" 
+                />
+              ) : (
+                <div className="w-10 h-10 bg-gradient-to-br from-primary-500 to-primary-700 rounded-lg flex items-center justify-center">
+                  <span className="text-white font-bold text-xl">
+                    {settings.branding?.fallbackText?.[0] || 'W'}
+                  </span>
+                </div>
+              )}
+              
               <div>
-                <h1 className="text-xl font-display font-bold text-white">
-                  {settings.storeName || 'Wonder'}
+                <h1 className="text-xl font-display font-bold text-white leading-none">
+                  {settings.branding?.fallbackText || 'Wonder'}
                 </h1>
-                <p className="text-xs text-primary-400 -mt-1 font-medium">
-                  Fashions
-                </p>
+                {settings.branding?.subText && (
+                  <p className="text-xs text-primary-400 font-medium">
+                    {settings.branding.subText}
+                  </p>
+                )}
               </div>
             </Link>
             

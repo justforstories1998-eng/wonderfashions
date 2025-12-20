@@ -16,6 +16,7 @@ const SETTINGS_ACTIONS = {
   UPDATE_SOCIAL_MEDIA: 'UPDATE_SOCIAL_MEDIA',
   UPDATE_STORE_INFO: 'UPDATE_STORE_INFO',
   UPDATE_SHIPPING: 'UPDATE_SHIPPING',
+  UPDATE_BRANDING: 'UPDATE_BRANDING',
   RESET_SETTINGS: 'RESET_SETTINGS',
   SET_LOADING: 'SET_LOADING',
   SET_ERROR: 'SET_ERROR'
@@ -81,6 +82,19 @@ const settingsReducer = (state, action) => {
       };
     }
 
+    case SETTINGS_ACTIONS.UPDATE_BRANDING: {
+      return {
+        ...state,
+        settings: {
+          ...state.settings,
+          branding: {
+            ...state.settings.branding,
+            ...action.payload
+          }
+        }
+      };
+    }
+
     case SETTINGS_ACTIONS.RESET_SETTINGS: {
       return {
         ...state,
@@ -127,6 +141,10 @@ export const SettingsProvider = ({ children }) => {
       const mergedSettings = {
         ...initialSettings,
         ...savedSettings,
+        branding: {
+          ...initialSettings.branding,
+          ...savedSettings.branding
+        },
         socialMedia: {
           ...initialSettings.socialMedia,
           ...savedSettings.socialMedia
@@ -172,6 +190,10 @@ export const SettingsProvider = ({ children }) => {
 
   const updateShipping = (shippingSettings) => {
     dispatch({ type: SETTINGS_ACTIONS.UPDATE_SHIPPING, payload: shippingSettings });
+  };
+
+  const updateBranding = (brandingSettings) => {
+    dispatch({ type: SETTINGS_ACTIONS.UPDATE_BRANDING, payload: brandingSettings });
   };
 
   const resetSettings = () => {
@@ -222,6 +244,7 @@ export const SettingsProvider = ({ children }) => {
     updateSingleSocialMedia,
     updateStoreInfo,
     updateShipping,
+    updateBranding,
     resetSettings,
     getSocialMediaLinks,
     getCurrency,

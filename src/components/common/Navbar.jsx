@@ -11,6 +11,7 @@ import {
 } from 'lucide-react';
 import { useCart } from '../../context/CartContext';
 import { useProducts } from '../../context/ProductContext';
+import { useSettings } from '../../context/SettingsContext';
 
 const Navbar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -23,6 +24,7 @@ const Navbar = () => {
   const navigate = useNavigate();
   const { totalItems } = useCart();
   const { categories, setFilters } = useProducts();
+  const { settings } = useSettings();
 
   // Handle scroll effect
   useEffect(() => {
@@ -84,16 +86,29 @@ const Navbar = () => {
               to="/" 
               className="flex items-center gap-2"
             >
-              <div className="w-10 h-10 bg-gradient-to-br from-primary-500 to-primary-700 rounded-lg flex items-center justify-center">
-                <span className="text-white font-bold text-xl">W</span>
-              </div>
+              {settings.branding?.logo ? (
+                <img 
+                  src={settings.branding.logo} 
+                  alt={settings.storeName} 
+                  className="h-10 w-auto object-contain"
+                />
+              ) : (
+                <div className="w-10 h-10 bg-gradient-to-br from-primary-500 to-primary-700 rounded-lg flex items-center justify-center">
+                  <span className="text-white font-bold text-xl">
+                    {settings.branding?.fallbackText?.[0] || 'W'}
+                  </span>
+                </div>
+              )}
+              
               <div className="hidden sm:block">
-                <h1 className="text-xl font-display font-bold text-secondary-900">
-                  Wonder
+                <h1 className="text-xl font-display font-bold text-secondary-900 leading-none">
+                  {settings.branding?.fallbackText || 'Wonder'}
                 </h1>
-                <p className="text-xs text-primary-600 -mt-1 font-medium">
-                  Fashions
-                </p>
+                {settings.branding?.subText && (
+                  <p className="text-xs text-primary-600 font-medium">
+                    {settings.branding.subText}
+                  </p>
+                )}
               </div>
             </Link>
 
