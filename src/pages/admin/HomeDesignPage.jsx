@@ -8,7 +8,16 @@ import {
   Trash2, 
   Eye, 
   EyeOff, 
-  Move
+  Move,
+  // Added missing imports below
+  Grid,
+  Star,
+  TrendingUp,
+  Sparkles,
+  Megaphone,
+  Images,
+  Type,
+  Layout
 } from 'lucide-react';
 import { useSettings } from '../../context/SettingsContext';
 import { useCountry } from '../../context/CountryContext';
@@ -95,6 +104,20 @@ const HomeDesignPage = () => {
     }
     newSections.forEach((s, i) => s.order = i + 1);
     setSections(newSections);
+  };
+
+  // Get icon for section type
+  const getSectionIcon = (type) => {
+    switch(type) {
+      case 'categories': return Grid;
+      case 'featuredProducts': return Star;
+      case 'trendingProducts': return TrendingUp;
+      case 'newArrivals': return Sparkles;
+      case 'promoBanner': return Megaphone;
+      case 'imageGallery': return Images;
+      case 'textBlock': return Type;
+      default: return Layout;
+    }
   };
 
   // Render Component Wrapper for Visual Editing
@@ -196,12 +219,18 @@ const HomeDesignPage = () => {
         {/* If adding new, show selector */}
         {!editingSection && (
           <div className="grid grid-cols-2 gap-4">
-            {sectionTypes.map(t => (
-              <button key={t.type} onClick={() => handleAddSection(t.type)} className="p-4 border rounded-lg hover:bg-primary-50 hover:border-primary-500 text-left">
-                <span className="block font-bold">{t.name}</span>
-                <span className="text-xs text-gray-500">{t.description}</span>
-              </button>
-            ))}
+            {sectionTypes.map(t => {
+              const Icon = getSectionIcon(t.type);
+              return (
+                <button key={t.type} onClick={() => handleAddSection(t.type)} className="p-4 border rounded-lg hover:bg-primary-50 hover:border-primary-500 text-left flex items-start gap-3">
+                  <div className="p-2 bg-secondary-100 rounded text-primary-600"><Icon size={24}/></div>
+                  <div>
+                    <span className="block font-bold">{t.name}</span>
+                    <span className="text-xs text-gray-500">{t.description}</span>
+                  </div>
+                </button>
+              );
+            })}
           </div>
         )}
 
@@ -213,7 +242,7 @@ const HomeDesignPage = () => {
               <input type="text" value={editingSection.title} onChange={e => setEditingSection({...editingSection, title: e.target.value})} className="input" />
             </div>
             <div>
-              <label className="label">Subtitle</label>
+              <label className="label">Subtitle (Optional)</label>
               <input type="text" value={editingSection.subtitle} onChange={e => setEditingSection({...editingSection, subtitle: e.target.value})} className="input" />
             </div>
             {editingSection.type === 'promoBanner' && (
