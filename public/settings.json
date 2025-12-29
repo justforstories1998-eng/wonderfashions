@@ -10,7 +10,11 @@
     "duration": 3000,
     "backgroundColor": "#7c3aed",
     "showTagline": true,
+<<<<<<< HEAD
     "tagline": "Posh but Affordable"
+=======
+    "tagline": "Fashion for Everyone"
+>>>>>>> temp-fix
   },
   "countries": {
     "india": {
@@ -117,6 +121,7 @@
   },
   "homeDesign": {
     "india": {
+<<<<<<< HEAD
       "heroSlides": [
         {
           "id": "slide1",
@@ -145,12 +150,19 @@
           "order": 2
         }
       ],
+=======
+      "heroSlides": [],
+>>>>>>> temp-fix
       "sections": [
         {
           "id": "categories",
           "type": "categories",
           "title": "Shop by Category",
+<<<<<<< HEAD
           "subtitle": "Explore our wide range of fashion & jewelry",
+=======
+          "subtitle": "Find exactly what you're looking for",
+>>>>>>> temp-fix
           "enabled": true,
           "order": 1
         },
@@ -165,11 +177,19 @@
         {
           "id": "banner1",
           "type": "promoBanner",
+<<<<<<< HEAD
           "title": "Bridal Collection",
           "subtitle": "Make your special day unforgettable",
           "buttonText": "Shop Bridal",
           "buttonLink": "/shop?category=bridal-sarees",
           "backgroundColor": "#db2777",
+=======
+          "title": "Get 20% Off Your First Order",
+          "subtitle": "Use code: WELCOME20",
+          "buttonText": "Shop Now",
+          "buttonLink": "/shop",
+          "backgroundColor": "#7c3aed",
+>>>>>>> temp-fix
           "backgroundImage": null,
           "enabled": true,
           "order": 3
@@ -178,29 +198,63 @@
           "id": "trending",
           "type": "trendingProducts",
           "title": "Trending Now",
+<<<<<<< HEAD
           "subtitle": "Customer favourites",
           "enabled": true,
           "order": 4
+=======
+          "subtitle": "What everyone is wearing",
+          "enabled": true,
+          "order": 4
+        },
+        {
+          "id": "newArrivals",
+          "type": "newArrivals",
+          "title": "New Arrivals",
+          "subtitle": "Fresh styles just dropped",
+          "enabled": true,
+          "order": 5
+>>>>>>> temp-fix
         }
       ],
       "features": [
         {
+<<<<<<< HEAD
           "id": "manufacturer",
           "icon": "Factory",
           "title": "Direct from Manufacturer",
           "description": "No middle man, best prices",
+=======
+          "id": "shipping",
+          "icon": "Truck",
+          "title": "Free Shipping",
+          "description": "On orders above ₹1,999",
+>>>>>>> temp-fix
           "enabled": true
         },
         {
           "id": "returns",
           "icon": "RotateCcw",
+<<<<<<< HEAD
           "title": "Refund Guarantee",
           "description": "28 days refund policy",
+=======
+          "title": "Easy Returns",
+          "description": "7 day return policy",
+          "enabled": true
+        },
+        {
+          "id": "secure",
+          "icon": "Shield",
+          "title": "Secure Payment",
+          "description": "100% secure checkout",
+>>>>>>> temp-fix
           "enabled": true
         },
         {
           "id": "support",
           "icon": "Headphones",
+<<<<<<< HEAD
           "title": "100% Support",
           "description": "Customer satisfaction guaranteed",
           "enabled": true
@@ -210,11 +264,16 @@
           "icon": "Award",
           "title": "Posh & Affordable",
           "description": "Premium quality for less",
+=======
+          "title": "24/7 Support",
+          "description": "We're here to help",
+>>>>>>> temp-fix
           "enabled": true
         }
       ]
     },
     "uk": {
+<<<<<<< HEAD
       "heroSlides": [
         {
           "id": "slide1",
@@ -243,12 +302,19 @@
           "order": 2
         }
       ],
+=======
+      "heroSlides": [],
+>>>>>>> temp-fix
       "sections": [
         {
           "id": "categories",
           "type": "categories",
           "title": "Shop by Category",
+<<<<<<< HEAD
           "subtitle": "Traditional & Modern Styles",
+=======
+          "subtitle": "Find exactly what you're looking for",
+>>>>>>> temp-fix
           "enabled": true,
           "order": 1
         },
@@ -256,18 +322,30 @@
           "id": "featured",
           "type": "featuredProducts",
           "title": "Featured Collection",
+<<<<<<< HEAD
           "subtitle": "New arrivals in UK",
+=======
+          "subtitle": "Handpicked styles just for you",
+>>>>>>> temp-fix
           "enabled": true,
           "order": 2
         },
         {
           "id": "banner1",
           "type": "promoBanner",
+<<<<<<< HEAD
           "title": "German Silver Items",
           "subtitle": "Traditional decor and accessories",
           "buttonText": "Explore",
           "buttonLink": "/shop?category=german-silver",
           "backgroundColor": "#0f766e",
+=======
+          "title": "Get 20% Off Your First Order",
+          "subtitle": "Use code: WELCOME20",
+          "buttonText": "Shop Now",
+          "buttonLink": "/shop",
+          "backgroundColor": "#7c3aed",
+>>>>>>> temp-fix
           "backgroundImage": null,
           "enabled": true,
           "order": 3
@@ -275,30 +353,65 @@
         {
           "id": "trending",
           "type": "trendingProducts",
+<<<<<<< HEAD
           "title": "Best Sellers",
           "subtitle": "Most loved by our customers",
           "enabled": true,
           "order": 4
+=======
+          "title": "Trending Now",
+          "subtitle": "What everyone is wearing",
+          "enabled": true,
+          "order": 4
+        },
+        {
+          "id": "newArrivals",
+          "type": "newArrivals",
+          "title": "New Arrivals",
+          "subtitle": "Fresh styles just dropped",
+          "enabled": true,
+          "order": 5
+>>>>>>> temp-fix
         }
       ],
       "features": [
         {
+<<<<<<< HEAD
           "id": "manufacturer",
           "icon": "Factory",
           "title": "Direct from Manufacturer",
           "description": "No middle man, best prices",
+=======
+          "id": "shipping",
+          "icon": "Truck",
+          "title": "Free Delivery",
+          "description": "On orders over £100",
+>>>>>>> temp-fix
           "enabled": true
         },
         {
           "id": "returns",
           "icon": "RotateCcw",
+<<<<<<< HEAD
           "title": "Refund Guarantee",
           "description": "28 days refund policy",
+=======
+          "title": "Easy Returns",
+          "description": "30 day return policy",
+          "enabled": true
+        },
+        {
+          "id": "secure",
+          "icon": "Shield",
+          "title": "Secure Payment",
+          "description": "100% secure checkout",
+>>>>>>> temp-fix
           "enabled": true
         },
         {
           "id": "support",
           "icon": "Headphones",
+<<<<<<< HEAD
           "title": "100% Support",
           "description": "Customer satisfaction guaranteed",
           "enabled": true
@@ -308,11 +421,16 @@
           "icon": "Award",
           "title": "Posh & Affordable",
           "description": "Premium quality for less",
+=======
+          "title": "24/7 Support",
+          "description": "We're here to help",
+>>>>>>> temp-fix
           "enabled": true
         }
       ]
     }
   },
+<<<<<<< HEAD
   "categories": [
     {
       "id": "women",
@@ -404,12 +522,77 @@
     },
     {
       "id": "accessories",
+=======
+<<<<<<< HEAD
+  "tax": {
+    "rate": 0.2,
+    "name": "VAT"
+=======
+  "categories": [
+    {
+      "id": "cat1",
+      "name": "Dresses",
+      "slug": "dresses",
+      "image": null,
+      "enabled": true,
+      "order": 1
+    },
+    {
+      "id": "cat2",
+      "name": "Tops",
+      "slug": "tops",
+      "image": null,
+      "enabled": true,
+      "order": 2
+    },
+    {
+      "id": "cat3",
+      "name": "Jeans",
+      "slug": "jeans",
+      "image": null,
+      "enabled": true,
+      "order": 3
+    },
+    {
+      "id": "cat4",
+      "name": "Jackets",
+      "slug": "jackets",
+      "image": null,
+      "enabled": true,
+      "order": 4
+    },
+    {
+      "id": "cat5",
+>>>>>>> temp-fix
       "name": "Accessories",
       "slug": "accessories",
       "image": null,
       "enabled": true,
+<<<<<<< HEAD
       "order": 7,
       "subcategories": []
     }
   ]
+=======
+      "order": 5
+    },
+    {
+      "id": "cat6",
+      "name": "Activewear",
+      "slug": "activewear",
+      "image": null,
+      "enabled": true,
+      "order": 6
+    }
+  ],
+  "products": {
+    "india": [],
+    "uk": []
+  },
+  "orders": {
+    "india": [],
+    "uk": []
+>>>>>>> 7218a09 (New Updates)
+  }
+>>>>>>> temp-fix
 }

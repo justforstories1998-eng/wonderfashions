@@ -1,6 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+<<<<<<< HEAD
 import { Upload, X, Plus, Image as ImageIcon, Globe } from 'lucide-react';
+=======
+import { Upload, X, Plus, Image as ImageIcon, Globe, Clock } from 'lucide-react';
+>>>>>>> temp-fix
 import { useProducts } from '../../context/ProductContext';
 import { useCountry } from '../../context/CountryContext';
 import { useToast } from '../common/Toast';
@@ -16,13 +20,25 @@ const ProductForm = ({ initialData = null, initialCountry = 'uk', mode = 'add' }
   const [loading, setLoading] = useState(false);
   const [targetCountry, setTargetCountry] = useState(initialCountry);
   
+<<<<<<< HEAD
+=======
+  // Expiration State
+  const [hasExpiration, setHasExpiration] = useState(false);
+  const [durationDays, setDurationDays] = useState(14); // Default 2 weeks
+  const [durationHours, setDurationHours] = useState(0);
+  
+>>>>>>> temp-fix
   const [formData, setFormData] = useState({
     name: '',
     description: '',
     price: '',
     originalPrice: '',
     category: '',
+<<<<<<< HEAD
     subcategory: '', // Added subcategory
+=======
+    subcategory: '',
+>>>>>>> temp-fix
     stock: '',
     image: '',
     images: [],
@@ -31,7 +47,12 @@ const ProductForm = ({ initialData = null, initialCountry = 'uk', mode = 'add' }
     featured: false,
     trending: false,
     newArrival: true,
+<<<<<<< HEAD
     enabled: true
+=======
+    enabled: true,
+    expiresAt: null // New Field
+>>>>>>> temp-fix
   });
 
   const [newSize, setNewSize] = useState('');
@@ -47,9 +68,23 @@ const ProductForm = ({ initialData = null, initialCountry = 'uk', mode = 'add' }
         images: initialData.images || [initialData.image],
         sizes: initialData.sizes || [],
         colors: initialData.colors || [],
+<<<<<<< HEAD
         subcategory: initialData.subcategory || ''
       });
       setTargetCountry(initialCountry);
+=======
+        subcategory: initialData.subcategory || '',
+        expiresAt: initialData.expiresAt || null
+      });
+      setTargetCountry(initialCountry);
+      
+      // Set expiration UI if exists
+      if (initialData.expiresAt) {
+        setHasExpiration(true);
+        // We don't reverse calculate days/hours because it's a fixed date now, 
+        // but we show the current expiry date below
+      }
+>>>>>>> temp-fix
     }
   }, [initialData, mode, initialCountry]);
 
@@ -105,18 +140,46 @@ const ProductForm = ({ initialData = null, initialCountry = 'uk', mode = 'add' }
     return Object.keys(newErrors).length === 0;
   };
 
+  const calculateExpirationDate = () => {
+    if (!hasExpiration) return null;
+    
+    // If editing and didn't change duration, keep existing unless explicitly updated
+    // But for simplicity, we calculate fresh from "now" if they touched the controls
+    const now = new Date();
+    const expiry = new Date(now.getTime() + (durationDays * 24 * 60 * 60 * 1000) + (durationHours * 60 * 60 * 1000));
+    return expiry.toISOString();
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!validateForm()) return;
 
     setLoading(true);
     try {
+<<<<<<< HEAD
+=======
+      // Calculate Expiry
+      let finalExpiry = formData.expiresAt;
+      
+      // If user enabled expiration and we are in add mode OR they changed the toggle/values
+      if (hasExpiration && (mode === 'add' || !formData.expiresAt)) {
+         finalExpiry = calculateExpirationDate();
+      } else if (!hasExpiration) {
+         finalExpiry = null;
+      }
+
+>>>>>>> temp-fix
       const productData = {
         ...formData,
         price: parseFloat(formData.price),
         originalPrice: formData.originalPrice ? parseFloat(formData.originalPrice) : null,
         stock: parseInt(formData.stock),
+<<<<<<< HEAD
         images: formData.images.length > 0 ? formData.images : [formData.image]
+=======
+        images: formData.images.length > 0 ? formData.images : [formData.image],
+        expiresAt: finalExpiry
+>>>>>>> temp-fix
       };
 
       if (mode === 'add') {
@@ -171,6 +234,54 @@ const ProductForm = ({ initialData = null, initialCountry = 'uk', mode = 'add' }
         </div>
       </div>
 
+      {/* Expiration Settings (NEW) */}
+      <div className="bg-white p-6 rounded-xl shadow-sm border border-secondary-100">
+        <h3 className="text-lg font-semibold text-secondary-900 mb-4 border-b pb-2 flex items-center gap-2">
+          <Clock size={20} className="text-primary-600" /> Auto-Delete / Expiration
+        </h3>
+        <div className="space-y-4">
+          <label className="flex items-center gap-3 cursor-pointer">
+            <input 
+              type="checkbox" 
+              checked={hasExpiration} 
+              onChange={(e) => setHasExpiration(e.target.checked)} 
+              className="w-5 h-5 text-primary-600 rounded focus:ring-primary-500 border-gray-300"
+            />
+            <span className="font-medium text-secondary-900">Set Expiration Time</span>
+          </label>
+
+          {hasExpiration && (
+            <div className="grid grid-cols-2 gap-4 p-4 bg-secondary-50 rounded-lg animate-fade-in border border-secondary-200">
+              <div>
+                <label className="text-sm font-medium text-secondary-600 mb-1 block">Days</label>
+                <input 
+                  type="number" 
+                  min="0" 
+                  value={durationDays} 
+                  onChange={(e) => setDurationDays(parseInt(e.target.value) || 0)} 
+                  className="input" 
+                />
+              </div>
+              <div>
+                <label className="text-sm font-medium text-secondary-600 mb-1 block">Hours</label>
+                <input 
+                  type="number" 
+                  min="0" 
+                  max="23" 
+                  value={durationHours} 
+                  onChange={(e) => setDurationHours(parseInt(e.target.value) || 0)} 
+                  className="input" 
+                />
+              </div>
+              <div className="col-span-2 text-xs text-secondary-500">
+                Product will automatically be removed from the store after this duration.
+                {formData.expiresAt && <div className="mt-1 font-medium text-primary-700">Currently expires at: {new Date(formData.expiresAt).toLocaleString()}</div>}
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+
       {/* Pricing & Inventory */}
       <div className="bg-white p-6 rounded-xl shadow-sm border border-secondary-100">
         <h3 className="text-lg font-semibold text-secondary-900 mb-4 border-b pb-2">Pricing & Inventory</h3>
@@ -190,7 +301,10 @@ const ProductForm = ({ initialData = null, initialCountry = 'uk', mode = 'add' }
             {errors.stock && <p className="text-red-500 text-xs">{errors.stock}</p>}
           </div>
           
+<<<<<<< HEAD
           {/* CATEGORIES & SUBCATEGORIES */}
+=======
+>>>>>>> temp-fix
           <div className="space-y-4">
             <div className="space-y-1">
               <label className="label">Category</label>

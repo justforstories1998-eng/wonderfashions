@@ -174,12 +174,29 @@ export const ProductProvider = ({ children }) => {
     return state.products[country]?.find(product => product.id === productId);
   };
 
+<<<<<<< HEAD
+=======
+  // UPDATED: Now filters expired products automatically
+>>>>>>> temp-fix
   const getFilteredProducts = (country = currentCountry) => {
     let filtered = [...(state.products[country] || [])];
     const { category, priceRange, sortBy, searchQuery } = state.filters;
 
+<<<<<<< HEAD
     filtered = filtered.filter(p => p.enabled !== false);
 
+=======
+    // 1. Filter by Enabled Status
+    filtered = filtered.filter(p => p.enabled !== false);
+
+    // 2. Filter by Expiration (NEW)
+    const now = new Date();
+    filtered = filtered.filter(p => {
+        if (!p.expiresAt) return true; // No expiration = keep
+        return new Date(p.expiresAt) > now; // Expiration > Now = keep
+    });
+
+>>>>>>> temp-fix
     const isSaleFilter = window.location.search.includes('filter=sale');
     if (isSaleFilter) {
       filtered = filtered.filter(p => p.originalPrice && p.originalPrice > p.price);
@@ -239,17 +256,41 @@ export const ProductProvider = ({ children }) => {
 
   const getFeaturedProducts = (country = currentCountry) => {
     return (state.products[country] || [])
+<<<<<<< HEAD
       .filter(product => product.featured && product.enabled !== false);
+=======
+      .filter(product => 
+        product.featured && 
+        product.enabled !== false &&
+        (!product.expiresAt || new Date(product.expiresAt) > new Date())
+      );
+>>>>>>> temp-fix
   };
 
   const getTrendingProducts = (country = currentCountry) => {
     return (state.products[country] || [])
+<<<<<<< HEAD
       .filter(product => product.trending && product.enabled !== false);
+=======
+      .filter(product => 
+        product.trending && 
+        product.enabled !== false &&
+        (!product.expiresAt || new Date(product.expiresAt) > new Date())
+      );
+>>>>>>> temp-fix
   };
 
   const getNewArrivals = (country = currentCountry) => {
     return (state.products[country] || [])
+<<<<<<< HEAD
       .filter(product => product.newArrival && product.enabled !== false);
+=======
+      .filter(product => 
+        product.newArrival && 
+        product.enabled !== false &&
+        (!product.expiresAt || new Date(product.expiresAt) > new Date())
+      );
+>>>>>>> temp-fix
   };
 
   const getProductsByCategory = (categoryName, country = currentCountry) => {
@@ -257,7 +298,12 @@ export const ProductProvider = ({ children }) => {
       .filter(product => 
         (product.category.toLowerCase() === categoryName.toLowerCase() || 
          product.subcategory?.toLowerCase() === categoryName.toLowerCase()) && 
+<<<<<<< HEAD
         product.enabled !== false
+=======
+        product.enabled !== false &&
+        (!product.expiresAt || new Date(product.expiresAt) > new Date())
+>>>>>>> temp-fix
       );
   };
 
@@ -269,11 +315,17 @@ export const ProductProvider = ({ children }) => {
       .filter(p => 
         p.category === product.category && 
         p.id !== product.id && 
+<<<<<<< HEAD
         p.enabled !== false
+=======
+        p.enabled !== false &&
+        (!p.expiresAt || new Date(p.expiresAt) > new Date())
+>>>>>>> temp-fix
       )
       .slice(0, limit);
   };
 
+<<<<<<< HEAD
   // UPDATED: Get categories logic
   const getCategories = () => {
     // 1. Prioritize Settings (The correct source for empty store)
@@ -282,6 +334,13 @@ export const ProductProvider = ({ children }) => {
     }
     
     // 2. Fallback: Derive from products (Only if settings missing)
+=======
+  const getCategories = () => {
+    if (settings.categories && settings.categories.length > 0) {
+      return settings.categories.filter(c => c.enabled !== false);
+    }
+    
+>>>>>>> temp-fix
     const countryProducts = state.products[currentCountry] || [];
     const uniqueCategories = [...new Set(countryProducts.map(p => p.category))];
     
@@ -349,7 +408,6 @@ export const ProductProvider = ({ children }) => {
   );
 };
 
-// Custom hook to use product context
 export const useProducts = () => {
   const context = useContext(ProductContext);
   if (!context) {

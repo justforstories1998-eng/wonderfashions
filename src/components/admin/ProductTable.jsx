@@ -73,8 +73,18 @@ const ProductTable = () => {
     }
   };
 
+<<<<<<< HEAD
   // Render Status Badge
   const renderStatus = (product) => {
+=======
+  // Render Status Badge - UPDATED with Expiration
+  const renderStatus = (product) => {
+    // Check Expiration
+    if (product.expiresAt && new Date(product.expiresAt) < new Date()) {
+      return <span className="badge bg-gray-200 text-gray-600 font-medium">Expired</span>;
+    }
+
+>>>>>>> temp-fix
     if (product.enabled === false) {
       return <span className="badge bg-gray-100 text-gray-700">Disabled</span>;
     }
