@@ -10,7 +10,7 @@
     "duration": 3000,
     "backgroundColor": "#7c3aed",
     "showTagline": true,
-    "tagline": "Fashion for Everyone"
+    "tagline": "Posh but Affordable"
   },
   "countries": {
     "india": {
@@ -117,13 +117,40 @@
   },
   "homeDesign": {
     "india": {
-      "heroSlides": [],
+      "heroSlides": [
+        {
+          "id": "slide1",
+          "title": "Traditional Elegance",
+          "subtitle": "New Collection",
+          "heading": "Exquisite Sarees & Lehengas",
+          "description": "Direct from manufacturer. Posh styles at affordable prices.",
+          "buttonText": "Shop Sarees",
+          "buttonLink": "/shop?category=sarees",
+          "image": "https://images.unsplash.com/photo-1583391733958-e02376e9ced3?w=1200",
+          "align": "left",
+          "enabled": true,
+          "order": 1
+        },
+        {
+          "id": "slide2",
+          "title": "Family Combos",
+          "subtitle": "Matching Styles",
+          "heading": "Mum & Daughter Sets",
+          "description": "Perfect matching outfits for special occasions.",
+          "buttonText": "View Collection",
+          "buttonLink": "/shop?category=family-combo",
+          "image": "https://images.unsplash.com/photo-1610189012906-478338275202?w=1200",
+          "align": "right",
+          "enabled": true,
+          "order": 2
+        }
+      ],
       "sections": [
         {
           "id": "categories",
           "type": "categories",
           "title": "Shop by Category",
-          "subtitle": "Find exactly what you're looking for",
+          "subtitle": "Explore our wide range of fashion & jewelry",
           "enabled": true,
           "order": 1
         },
@@ -138,11 +165,11 @@
         {
           "id": "banner1",
           "type": "promoBanner",
-          "title": "Get 20% Off Your First Order",
-          "subtitle": "Use code: WELCOME20",
-          "buttonText": "Shop Now",
-          "buttonLink": "/shop",
-          "backgroundColor": "#7c3aed",
+          "title": "Bridal Collection",
+          "subtitle": "Make your special day unforgettable",
+          "buttonText": "Shop Bridal",
+          "buttonLink": "/shop?category=bridal-sarees",
+          "backgroundColor": "#db2777",
           "backgroundImage": null,
           "enabled": true,
           "order": 3
@@ -151,58 +178,77 @@
           "id": "trending",
           "type": "trendingProducts",
           "title": "Trending Now",
-          "subtitle": "What everyone is wearing",
+          "subtitle": "Customer favourites",
           "enabled": true,
           "order": 4
-        },
-        {
-          "id": "newArrivals",
-          "type": "newArrivals",
-          "title": "New Arrivals",
-          "subtitle": "Fresh styles just dropped",
-          "enabled": true,
-          "order": 5
         }
       ],
       "features": [
         {
-          "id": "shipping",
-          "icon": "Truck",
-          "title": "Free Shipping",
-          "description": "On orders above ₹1,999",
+          "id": "manufacturer",
+          "icon": "Factory",
+          "title": "Direct from Manufacturer",
+          "description": "No middle man, best prices",
           "enabled": true
         },
         {
           "id": "returns",
           "icon": "RotateCcw",
-          "title": "Easy Returns",
-          "description": "7 day return policy",
-          "enabled": true
-        },
-        {
-          "id": "secure",
-          "icon": "Shield",
-          "title": "Secure Payment",
-          "description": "100% secure checkout",
+          "title": "Refund Guarantee",
+          "description": "28 days refund policy",
           "enabled": true
         },
         {
           "id": "support",
           "icon": "Headphones",
-          "title": "24/7 Support",
-          "description": "We're here to help",
+          "title": "100% Support",
+          "description": "Customer satisfaction guaranteed",
+          "enabled": true
+        },
+        {
+          "id": "quality",
+          "icon": "Award",
+          "title": "Posh & Affordable",
+          "description": "Premium quality for less",
           "enabled": true
         }
       ]
     },
     "uk": {
-      "heroSlides": [],
+      "heroSlides": [
+        {
+          "id": "slide1",
+          "title": "Fusion Wear",
+          "subtitle": "Indo-Western Styles",
+          "heading": "Celebrate in Style",
+          "description": "Authentic Indian wear for the modern UK lifestyle.",
+          "buttonText": "Shop Now",
+          "buttonLink": "/shop",
+          "image": "https://images.unsplash.com/photo-1595341888016-a392ef81b7de?w=1200",
+          "align": "left",
+          "enabled": true,
+          "order": 1
+        },
+        {
+          "id": "slide2",
+          "title": "Jewellery Collection",
+          "subtitle": "German Silver & Gold Plated",
+          "heading": "Exquisite Accessories",
+          "description": "From bridal sets to daily wear earrings.",
+          "buttonText": "Shop Jewellery",
+          "buttonLink": "/shop?category=jewelry",
+          "image": "https://images.unsplash.com/photo-1611591437281-460bfbe1220a?w=1200",
+          "align": "right",
+          "enabled": true,
+          "order": 2
+        }
+      ],
       "sections": [
         {
           "id": "categories",
           "type": "categories",
           "title": "Shop by Category",
-          "subtitle": "Find exactly what you're looking for",
+          "subtitle": "Traditional & Modern Styles",
           "enabled": true,
           "order": 1
         },
@@ -210,18 +256,18 @@
           "id": "featured",
           "type": "featuredProducts",
           "title": "Featured Collection",
-          "subtitle": "Handpicked styles just for you",
+          "subtitle": "New arrivals in UK",
           "enabled": true,
           "order": 2
         },
         {
           "id": "banner1",
           "type": "promoBanner",
-          "title": "Get 20% Off Your First Order",
-          "subtitle": "Use code: WELCOME20",
-          "buttonText": "Shop Now",
-          "buttonLink": "/shop",
-          "backgroundColor": "#7c3aed",
+          "title": "German Silver Items",
+          "subtitle": "Traditional decor and accessories",
+          "buttonText": "Explore",
+          "buttonLink": "/shop?category=german-silver",
+          "backgroundColor": "#0f766e",
           "backgroundImage": null,
           "enabled": true,
           "order": 3
@@ -229,47 +275,39 @@
         {
           "id": "trending",
           "type": "trendingProducts",
-          "title": "Trending Now",
-          "subtitle": "What everyone is wearing",
+          "title": "Best Sellers",
+          "subtitle": "Most loved by our customers",
           "enabled": true,
           "order": 4
-        },
-        {
-          "id": "newArrivals",
-          "type": "newArrivals",
-          "title": "New Arrivals",
-          "subtitle": "Fresh styles just dropped",
-          "enabled": true,
-          "order": 5
         }
       ],
       "features": [
         {
-          "id": "shipping",
-          "icon": "Truck",
-          "title": "Free Delivery",
-          "description": "On orders over £100",
+          "id": "manufacturer",
+          "icon": "Factory",
+          "title": "Direct from Manufacturer",
+          "description": "No middle man, best prices",
           "enabled": true
         },
         {
           "id": "returns",
           "icon": "RotateCcw",
-          "title": "Easy Returns",
-          "description": "30 day return policy",
-          "enabled": true
-        },
-        {
-          "id": "secure",
-          "icon": "Shield",
-          "title": "Secure Payment",
-          "description": "100% secure checkout",
+          "title": "Refund Guarantee",
+          "description": "28 days refund policy",
           "enabled": true
         },
         {
           "id": "support",
           "icon": "Headphones",
-          "title": "24/7 Support",
-          "description": "We're here to help",
+          "title": "100% Support",
+          "description": "Customer satisfaction guaranteed",
+          "enabled": true
+        },
+        {
+          "id": "quality",
+          "icon": "Award",
+          "title": "Posh & Affordable",
+          "description": "Premium quality for less",
           "enabled": true
         }
       ]
@@ -277,60 +315,101 @@
   },
   "categories": [
     {
-      "id": "cat1",
-      "name": "Dresses",
-      "slug": "dresses",
+      "id": "women",
+      "name": "Women",
+      "slug": "women",
       "image": null,
       "enabled": true,
-      "order": 1
+      "order": 1,
+      "subcategories": [
+        { "id": "sarees", "name": "Sarees", "slug": "women-sarees" },
+        { "id": "lehenga", "name": "Lehenga", "slug": "women-lehenga" },
+        { "id": "kurtis", "name": "Kurtis & Gowns", "slug": "women-kurtis" },
+        { "id": "nighties", "name": "Nighties", "slug": "women-nighties" },
+        { "id": "blouses", "name": "Ready to Wear Blouses", "slug": "women-blouses" }
+      ]
     },
     {
-      "id": "cat2",
-      "name": "Tops",
-      "slug": "tops",
+      "id": "sarees-special",
+      "name": "Sarees Collection",
+      "slug": "sarees",
       "image": null,
       "enabled": true,
-      "order": 2
+      "order": 2,
+      "subcategories": [
+        { "id": "cotton", "name": "Cotton Sarees", "slug": "sarees-cotton" },
+        { "id": "silk", "name": "Silk Sarees", "slug": "sarees-silk" },
+        { "id": "semi-silk", "name": "Semi Silk", "slug": "sarees-semi-silk" },
+        { "id": "bridal", "name": "Bridal Sarees", "slug": "sarees-bridal" },
+        { "id": "ready-wear", "name": "Ready to Wear", "slug": "sarees-ready" },
+        { "id": "banarasi", "name": "Banarasi", "slug": "sarees-banarasi" }
+      ]
     },
     {
-      "id": "cat3",
-      "name": "Jeans",
-      "slug": "jeans",
+      "id": "men",
+      "name": "Men",
+      "slug": "men",
       "image": null,
       "enabled": true,
-      "order": 3
+      "order": 3,
+      "subcategories": [
+        { "id": "men-kurtis", "name": "Kurtis", "slug": "men-kurtis" },
+        { "id": "shirts", "name": "Shirts", "slug": "men-shirts" },
+        { "id": "traditional", "name": "Traditional Wear", "slug": "men-traditional" }
+      ]
     },
     {
-      "id": "cat4",
-      "name": "Jackets",
-      "slug": "jackets",
+      "id": "kids",
+      "name": "Kids",
+      "slug": "kids",
       "image": null,
       "enabled": true,
-      "order": 4
+      "order": 4,
+      "subcategories": [
+        { "id": "boys", "name": "Boys", "slug": "kids-boys" },
+        { "id": "girls", "name": "Girls", "slug": "kids-girls" }
+      ]
     },
     {
-      "id": "cat5",
+      "id": "combos",
+      "name": "Family Combos",
+      "slug": "combos",
+      "image": null,
+      "enabled": true,
+      "order": 5,
+      "subcategories": [
+        { "id": "mum-daughter", "name": "Mum & Daughter", "slug": "combo-mum-daughter" },
+        { "id": "family-set", "name": "Full Family Set", "slug": "combo-family" }
+      ]
+    },
+    {
+      "id": "jewelry",
+      "name": "Jewellery",
+      "slug": "jewelry",
+      "image": null,
+      "enabled": true,
+      "order": 6,
+      "subcategories": [
+        { "id": "bangles", "name": "Bangles", "slug": "jewelry-bangles" },
+        { "id": "earrings", "name": "Ear Rings", "slug": "jewelry-earrings" },
+        { "id": "bracelets", "name": "Bracelets", "slug": "jewelry-bracelets" },
+        { "id": "chains", "name": "Dollar Chains", "slug": "jewelry-chains" },
+        { "id": "anklets", "name": "Anklets", "slug": "jewelry-anklets" },
+        { "id": "hip-belts", "name": "Hip Belts", "slug": "jewelry-hip-belts" },
+        { "id": "bridal-sets", "name": "Bridal Sets", "slug": "jewelry-bridal" },
+        { "id": "dance-sets", "name": "Bharatanatyam Sets", "slug": "jewelry-dance" },
+        { "id": "necklaces", "name": "Necklace Sets", "slug": "jewelry-necklaces" },
+        { "id": "german-silver", "name": "German Silver", "slug": "jewelry-german-silver" }
+      ]
+    },
+    {
+      "id": "accessories",
       "name": "Accessories",
       "slug": "accessories",
       "image": null,
       "enabled": true,
-      "order": 5
-    },
-    {
-      "id": "cat6",
-      "name": "Activewear",
-      "slug": "activewear",
-      "image": null,
-      "enabled": true,
-      "order": 6
+      "order": 7,
+      "subcategories": []
     }
-  ],
-  "products": {
-    "india": [],
-    "uk": []
-  },
-  "orders": {
-    "india": [],
-    "uk": []
-  }
+  ]
 }
