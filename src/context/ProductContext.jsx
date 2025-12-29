@@ -1,16 +1,17 @@
-import { createContext, useContext, useReducer, useEffect } from 'react';
+import React, { createContext, useContext, useReducer, useEffect } from 'react';
 import { useLocalStorage } from '../hooks/useLocalStorage';
-import { initialProducts, categories } from '../data/products';
+import { initialProducts, createProduct } from '../data/products';
+import { useSettings } from './SettingsContext';
+import { useCountry } from './CountryContext';
 
 // Initial state
 const initialState = {
-  products: [],
-  categories: categories,
+  products: initialProducts, // { india: [], uk: [] }
   loading: false,
   error: null,
   filters: {
     category: '',
-    priceRange: [0, 500],
+    priceRange: [0, 10000],
     sortBy: 'newest',
     searchQuery: ''
   }
@@ -40,39 +41,37 @@ const productReducer = (state, action) => {
     }
 
     case PRODUCT_ACTIONS.ADD_PRODUCT: {
-      const newProduct = {
-        ...action.payload,
-        id: Date.now(),
-        createdAt: new Date().toISOString().split('T')[0],
-        rating: 0,
-        reviews: 0
-      };
+      const { country, product } = action.payload;
       return {
         ...state,
-        products: [...state.products, newProduct]
+        products: {
+          ...state.products,
+          [country]: [...(state.products[country] || []), product]
+        }
       };
     }
 
     case PRODUCT_ACTIONS.UPDATE_PRODUCT: {
-      const updatedProducts = state.products.map(product => {
-        if (product.id === action.payload.id) {
-          return { ...product, ...action.payload };
-        }
-        return product;
-      });
+      const { country, product } = action.payload;
       return {
         ...state,
-        products: updatedProducts
+        products: {
+          ...state.products,
+          [country]: state.products[country].map(p => 
+            p.id === product.id ? { ...p, ...product, updatedAt: new Date().toISOString() } : p
+          )
+        }
       };
     }
 
     case PRODUCT_ACTIONS.DELETE_PRODUCT: {
-      const filteredProducts = state.products.filter(
-        product => product.id !== action.payload
-      );
+      const { country, productId } = action.payload;
       return {
         ...state,
-        products: filteredProducts
+        products: {
+          ...state.products,
+          [country]: state.products[country].filter(p => p.id !== productId)
+        }
       };
     }
 
@@ -116,39 +115,51 @@ const ProductContext = createContext();
 // Provider component
 export const ProductProvider = ({ children }) => {
   const [savedProducts, setSavedProducts] = useLocalStorage(
-    'wonderfashions_products',
+    'wonderfashions_products_v2',
     initialProducts
   );
   const [state, dispatch] = useReducer(productReducer, initialState);
+  const { settings } = useSettings();
+  const { getCountryCode } = useCountry();
 
-  // Load products from localStorage on mount
   useEffect(() => {
     dispatch({ type: PRODUCT_ACTIONS.SET_LOADING, payload: true });
     try {
-      dispatch({ type: PRODUCT_ACTIONS.LOAD_PRODUCTS, payload: savedProducts });
+      // Ensure structure exists
+      const mergedProducts = {
+        india: savedProducts.india || [],
+        uk: savedProducts.uk || []
+      };
+      dispatch({ type: PRODUCT_ACTIONS.LOAD_PRODUCTS, payload: mergedProducts });
     } catch (error) {
       dispatch({ type: PRODUCT_ACTIONS.SET_ERROR, payload: error.message });
     }
   }, []);
 
-  // Save products to localStorage whenever they change
   useEffect(() => {
-    if (state.products.length > 0) {
+    if (state.products) {
       setSavedProducts(state.products);
     }
   }, [state.products, setSavedProducts]);
 
-  // Action functions
-  const addProduct = (productData) => {
-    dispatch({ type: PRODUCT_ACTIONS.ADD_PRODUCT, payload: productData });
+  const currentCountry = getCountryCode() || 'uk';
+
+  const getCountryProducts = (country = currentCountry) => {
+    return state.products[country] || [];
   };
 
-  const updateProduct = (productData) => {
-    dispatch({ type: PRODUCT_ACTIONS.UPDATE_PRODUCT, payload: productData });
+  const addProduct = (productData, country = 'uk') => {
+    const newProduct = createProduct(productData, country);
+    dispatch({ type: PRODUCT_ACTIONS.ADD_PRODUCT, payload: { country, product: newProduct } });
+    return newProduct;
   };
 
-  const deleteProduct = (productId) => {
-    dispatch({ type: PRODUCT_ACTIONS.DELETE_PRODUCT, payload: productId });
+  const updateProduct = (productData, country = 'uk') => {
+    dispatch({ type: PRODUCT_ACTIONS.UPDATE_PRODUCT, payload: { country, product: productData } });
+  };
+
+  const deleteProduct = (productId, country = 'uk') => {
+    dispatch({ type: PRODUCT_ACTIONS.DELETE_PRODUCT, payload: { country, productId } });
   };
 
   const setFilters = (filters) => {
@@ -159,17 +170,21 @@ export const ProductProvider = ({ children }) => {
     dispatch({ type: PRODUCT_ACTIONS.RESET_FILTERS });
   };
 
-  // Get product by ID
-  const getProductById = (productId) => {
-    return state.products.find(product => product.id === parseInt(productId));
+  const getProductById = (productId, country = currentCountry) => {
+    return state.products[country]?.find(product => product.id === productId);
   };
 
-  // Get filtered products
-  const getFilteredProducts = () => {
-    let filtered = [...state.products];
+  const getFilteredProducts = (country = currentCountry) => {
+    let filtered = [...(state.products[country] || [])];
     const { category, priceRange, sortBy, searchQuery } = state.filters;
 
-    // Filter by search query
+    filtered = filtered.filter(p => p.enabled !== false);
+
+    const isSaleFilter = window.location.search.includes('filter=sale');
+    if (isSaleFilter) {
+      filtered = filtered.filter(p => p.originalPrice && p.originalPrice > p.price);
+    }
+
     if (searchQuery) {
       const query = searchQuery.toLowerCase();
       filtered = filtered.filter(product =>
@@ -179,21 +194,20 @@ export const ProductProvider = ({ children }) => {
       );
     }
 
-    // Filter by category
     if (category) {
+      // Check if it matches main category OR subcategory
       filtered = filtered.filter(product =>
-        product.category.toLowerCase() === category.toLowerCase()
+        product.category.toLowerCase() === category.toLowerCase() ||
+        product.subcategory?.toLowerCase() === category.toLowerCase()
       );
     }
 
-    // Filter by price range
     if (priceRange) {
       filtered = filtered.filter(product =>
         product.price >= priceRange[0] && product.price <= priceRange[1]
       );
     }
 
-    // Sort products
     switch (sortBy) {
       case 'newest':
         filtered.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
@@ -223,69 +237,100 @@ export const ProductProvider = ({ children }) => {
     return filtered;
   };
 
-  // Get featured products
-  const getFeaturedProducts = () => {
-    return state.products.filter(product => product.featured);
+  const getFeaturedProducts = (country = currentCountry) => {
+    return (state.products[country] || [])
+      .filter(product => product.featured && product.enabled !== false);
   };
 
-  // Get trending products
-  const getTrendingProducts = () => {
-    return state.products.filter(product => product.trending);
+  const getTrendingProducts = (country = currentCountry) => {
+    return (state.products[country] || [])
+      .filter(product => product.trending && product.enabled !== false);
   };
 
-  // Get new arrivals
-  const getNewArrivals = () => {
-    return state.products.filter(product => product.newArrival);
+  const getNewArrivals = (country = currentCountry) => {
+    return (state.products[country] || [])
+      .filter(product => product.newArrival && product.enabled !== false);
   };
 
-  // Get products by category
-  const getProductsByCategory = (categoryName) => {
-    return state.products.filter(
-      product => product.category.toLowerCase() === categoryName.toLowerCase()
-    );
+  const getProductsByCategory = (categoryName, country = currentCountry) => {
+    return (state.products[country] || [])
+      .filter(product => 
+        (product.category.toLowerCase() === categoryName.toLowerCase() || 
+         product.subcategory?.toLowerCase() === categoryName.toLowerCase()) && 
+        product.enabled !== false
+      );
   };
 
-  // Get related products
-  const getRelatedProducts = (productId, limit = 4) => {
-    const product = getProductById(productId);
+  const getRelatedProducts = (productId, limit = 4, country = currentCountry) => {
+    const product = getProductById(productId, country);
     if (!product) return [];
 
-    return state.products
-      .filter(p => p.category === product.category && p.id !== product.id)
+    return (state.products[country] || [])
+      .filter(p => 
+        p.category === product.category && 
+        p.id !== product.id && 
+        p.enabled !== false
+      )
       .slice(0, limit);
   };
 
-  // Get product stats for admin
-  const getProductStats = () => {
-    const totalProducts = state.products.length;
-    const totalStock = state.products.reduce((sum, p) => sum + p.stock, 0);
-    const lowStockProducts = state.products.filter(p => p.stock < 10).length;
-    const outOfStockProducts = state.products.filter(p => p.stock === 0).length;
-    const categoryCounts = state.categories.map(cat => ({
-      name: cat.name,
-      count: state.products.filter(p => p.category === cat.name).length
+  // UPDATED: Get categories logic
+  const getCategories = () => {
+    // 1. Prioritize Settings (The correct source for empty store)
+    if (settings && settings.categories && settings.categories.length > 0) {
+      return settings.categories.filter(c => c.enabled !== false);
+    }
+    
+    // 2. Fallback: Derive from products (Only if settings missing)
+    const countryProducts = state.products[currentCountry] || [];
+    const uniqueCategories = [...new Set(countryProducts.map(p => p.category))];
+    
+    return uniqueCategories.map(name => ({
+      id: name.toLowerCase().replace(/\s+/g, '-'),
+      name,
+      slug: name.toLowerCase().replace(/\s+/g, '-'),
+      count: countryProducts.filter(p => p.category === name).length,
+      image: null,
+      subcategories: []
     }));
+  };
+
+  const getProductStats = (country = 'uk') => {
+    const countryProducts = state.products[country] || [];
+    const totalProducts = countryProducts.length;
+    const totalStock = countryProducts.reduce((sum, p) => sum + p.stock, 0);
+    const lowStockProducts = countryProducts.filter(p => p.stock < 10).length;
+    const outOfStockProducts = countryProducts.filter(p => p.stock === 0).length;
+    
+    const categoryCounts = {};
+    countryProducts.forEach(p => {
+      categoryCounts[p.category] = (categoryCounts[p.category] || 0) + 1;
+    });
 
     return {
       totalProducts,
       totalStock,
       lowStockProducts,
       outOfStockProducts,
-      categoryCounts
+      categoryCounts: Object.entries(categoryCounts).map(([name, count]) => ({ name, count }))
     };
   };
 
   const value = {
     products: state.products,
-    categories: state.categories,
+    categories: getCategories(),
     filters: state.filters,
     loading: state.loading,
     error: state.error,
+    
+    // Actions
     addProduct,
     updateProduct,
     deleteProduct,
     setFilters,
     resetFilters,
+    
+    // Getters
     getProductById,
     getFilteredProducts,
     getFeaturedProducts,
@@ -293,7 +338,8 @@ export const ProductProvider = ({ children }) => {
     getNewArrivals,
     getProductsByCategory,
     getRelatedProducts,
-    getProductStats
+    getProductStats,
+    getCountryProducts
   };
 
   return (

@@ -10,7 +10,8 @@ import {
   CreditCard,
   User,
   MapPin,
-  X
+  X,
+  Globe
 } from 'lucide-react';
 import { useOrders } from '../../context/OrderContext';
 import { useSettings } from '../../context/SettingsContext';
@@ -30,24 +31,31 @@ const OrderTable = () => {
 
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('All');
+  const [countryFilter, setCountryFilter] = useState('All');
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage] = useState(10);
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   
-  // Tax name
   const taxName = getTaxName() || 'VAT';
 
+  // FIX: Flatten orders from both countries into one array
+  const allOrders = [
+    ...(orders.uk || []).map(o => ({ ...o, country: 'uk' })),
+    ...(orders.india || []).map(o => ({ ...o, country: 'india' }))
+  ];
+
   // Filter orders
-  const filteredOrders = orders.filter(order => {
+  const filteredOrders = allOrders.filter(order => {
     const matchesSearch = 
       order.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
       order.customerName.toLowerCase().includes(searchTerm.toLowerCase()) ||
       order.customerEmail.toLowerCase().includes(searchTerm.toLowerCase());
     
     const matchesStatus = statusFilter === 'All' || order.status === statusFilter;
+    const matchesCountry = countryFilter === 'All' || order.country === countryFilter;
     
-    return matchesSearch && matchesStatus;
+    return matchesSearch && matchesStatus && matchesCountry;
   });
 
   // Pagination
@@ -60,7 +68,6 @@ const OrderTable = () => {
     setCurrentPage(pageNumber);
   };
 
-  // Status Badge Helper
   const getStatusColor = (status) => {
     switch (status) {
       case 'Pending': return 'bg-yellow-100 text-yellow-700';
@@ -73,10 +80,10 @@ const OrderTable = () => {
   };
 
   const handleStatusChange = (orderId, newStatus) => {
-    updateOrderStatus(orderId, newStatus);
+    // Pass the country explicitly if we know it, otherwise context handles search
+    updateOrderStatus(orderId, newStatus, null, selectedOrder?.country);
     toast.success(`Order status updated to ${newStatus}`);
     
-    // Update local state if modal is open
     if (selectedOrder && selectedOrder.id === orderId) {
       setSelectedOrder(prev => ({ ...prev, status: newStatus }));
     }
@@ -113,19 +120,36 @@ const OrderTable = () => {
             <Search size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-secondary-400" />
           </div>
 
-          {/* Filter */}
-          <div className="relative w-full sm:w-auto">
-            <select
-              value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value)}
-              className="w-full sm:w-auto pl-9 pr-8 py-2 border border-secondary-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 text-sm appearance-none bg-white cursor-pointer"
-            >
-              <option value="All">All Statuses</option>
-              {orderStatuses.map(status => (
-                <option key={status} value={status}>{status}</option>
-              ))}
-            </select>
-            <Filter size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-secondary-500" />
+          {/* Filters */}
+          <div className="flex flex-wrap items-center gap-2">
+            {/* Country Filter */}
+            <div className="relative">
+              <select
+                value={countryFilter}
+                onChange={(e) => setCountryFilter(e.target.value)}
+                className="pl-9 pr-8 py-2 border border-secondary-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 text-sm appearance-none bg-white cursor-pointer"
+              >
+                <option value="All">All Countries</option>
+                <option value="uk">United Kingdom</option>
+                <option value="india">India</option>
+              </select>
+              <Globe size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-secondary-500" />
+            </div>
+
+            {/* Status Filter */}
+            <div className="relative">
+              <select
+                value={statusFilter}
+                onChange={(e) => setStatusFilter(e.target.value)}
+                className="pl-9 pr-8 py-2 border border-secondary-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 text-sm appearance-none bg-white cursor-pointer"
+              >
+                <option value="All">All Statuses</option>
+                {orderStatuses.map(status => (
+                  <option key={status} value={status}>{status}</option>
+                ))}
+              </select>
+              <Filter size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-secondary-500" />
+            </div>
           </div>
         </div>
 
@@ -136,6 +160,7 @@ const OrderTable = () => {
               <tr>
                 <th>Order ID</th>
                 <th>Customer</th>
+                <th>Country</th>
                 <th>Date</th>
                 <th>Total</th>
                 <th>Payment</th>
@@ -154,11 +179,16 @@ const OrderTable = () => {
                       <p className="font-medium text-secondary-900">{order.customerName}</p>
                       <p className="text-xs text-secondary-500">{order.customerEmail}</p>
                     </td>
+                    <td className="py-3 px-6">
+                      <span className="inline-flex items-center px-2 py-1 bg-secondary-100 text-xs font-medium rounded text-secondary-700 uppercase">
+                        {order.country === 'india' ? '🇮🇳 IN' : '🇬🇧 UK'}
+                      </span>
+                    </td>
                     <td className="py-3 px-6 text-secondary-600 text-sm">
                       {new Date(order.createdAt).toLocaleDateString()}
                     </td>
                     <td className="py-3 px-6 font-medium text-secondary-900">
-                      {formatPrice(order.total)}
+                      {order.country === 'india' ? '₹' : '£'}{order.total.toFixed(2)}
                     </td>
                     <td className="py-3 px-6">
                       <span className={`badge ${order.paymentStatus === 'Paid' ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'}`}>
@@ -183,7 +213,7 @@ const OrderTable = () => {
                 ))
               ) : (
                 <tr>
-                  <td colSpan="7" className="text-center py-12 text-secondary-500">
+                  <td colSpan="8" className="text-center py-12 text-secondary-500">
                     No orders found.
                   </td>
                 </tr>
@@ -301,7 +331,7 @@ const OrderTable = () => {
                 <div className="text-sm text-secondary-700 space-y-1">
                   <p>{selectedOrder.shippingAddress.street}</p>
                   <p>
-                    {selectedOrder.shippingAddress.city}, {selectedOrder.shippingAddress.state} {selectedOrder.shippingAddress.zipCode}
+                    {selectedOrder.shippingAddress.city}, {selectedOrder.shippingAddress.state} {selectedOrder.shippingAddress.zipCode || selectedOrder.shippingAddress.postcode}
                   </p>
                   <p>{selectedOrder.shippingAddress.country}</p>
                 </div>
@@ -322,8 +352,8 @@ const OrderTable = () => {
                       <p className="text-sm text-secondary-500">Size: {item.size} | Color: {item.color}</p>
                     </div>
                     <div className="text-right">
-                      <p className="text-sm text-secondary-500">{item.quantity} x {formatPrice(item.price)}</p>
-                      <p className="font-medium text-secondary-900">{formatPrice(item.quantity * item.price)}</p>
+                      <p className="text-sm text-secondary-500">{item.quantity} x {selectedOrder.country === 'india' ? '₹' : '£'}{item.price.toFixed(2)}</p>
+                      <p className="font-medium text-secondary-900">{selectedOrder.country === 'india' ? '₹' : '£'}{(item.quantity * item.price).toFixed(2)}</p>
                     </div>
                   </div>
                 ))}
@@ -335,19 +365,19 @@ const OrderTable = () => {
               <div className="w-full md:w-1/3 space-y-2">
                 <div className="flex justify-between text-secondary-600">
                   <span>Subtotal</span>
-                  <span>{formatPrice(selectedOrder.subtotal)}</span>
+                  <span>{selectedOrder.country === 'india' ? '₹' : '£'}{selectedOrder.subtotal.toFixed(2)}</span>
                 </div>
                 <div className="flex justify-between text-secondary-600">
                   <span>Delivery</span>
-                  <span>{selectedOrder.shipping === 0 ? 'Free' : formatPrice(selectedOrder.shipping)}</span>
+                  <span>{selectedOrder.shipping === 0 ? 'Free' : `${selectedOrder.country === 'india' ? '₹' : '£'}${selectedOrder.shipping.toFixed(2)}`}</span>
                 </div>
                 <div className="flex justify-between text-secondary-600">
                   <span>{taxName}</span>
-                  <span>{formatPrice(selectedOrder.tax)}</span>
+                  <span>{selectedOrder.country === 'india' ? '₹' : '£'}{selectedOrder.tax.toFixed(2)}</span>
                 </div>
                 <div className="flex justify-between font-bold text-lg text-secondary-900 border-t border-secondary-200 pt-2">
                   <span>Total</span>
-                  <span className="text-primary-600">{formatPrice(selectedOrder.total)}</span>
+                  <span className="text-primary-600">{selectedOrder.country === 'india' ? '₹' : '£'}{selectedOrder.total.toFixed(2)}</span>
                 </div>
               </div>
             </div>

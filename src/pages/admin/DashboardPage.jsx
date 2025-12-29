@@ -4,7 +4,6 @@ import {
   DollarSign, 
   ShoppingCart, 
   Package, 
-  Users,
   TrendingUp,
   ArrowRight,
   Eye,
@@ -21,9 +20,29 @@ const DashboardPage = () => {
   const { getOrderStats, getRecentOrders, loading: ordersLoading } = useOrders();
   const { formatPrice } = useSettings();
 
-  const productStats = getProductStats();
-  const orderStats = getOrderStats();
-  const recentOrders = getRecentOrders(5);
+  // Get aggregated stats
+  const ukProductStats = getProductStats('uk') || { totalProducts: 0, outOfStockProducts: 0, lowStockProducts: 0, totalStock: 0 };
+  const indiaProductStats = getProductStats('india') || { totalProducts: 0, outOfStockProducts: 0, lowStockProducts: 0, totalStock: 0 };
+  
+  // Combine product stats
+  const totalProducts = ukProductStats.totalProducts + indiaProductStats.totalProducts;
+  const totalOutOfStock = ukProductStats.outOfStockProducts + indiaProductStats.outOfStockProducts;
+  const totalLowStock = ukProductStats.lowStockProducts + indiaProductStats.lowStockProducts;
+  const totalStock = ukProductStats.totalStock + indiaProductStats.totalStock;
+
+  // Get aggregated order stats
+  const orderStats = getOrderStats() || { 
+    totalOrders: 0, 
+    totalRevenue: 0, 
+    averageOrderValue: 0, 
+    pendingOrders: 0, 
+    processingOrders: 0, 
+    shippedOrders: 0, 
+    deliveredOrders: 0, 
+    cancelledOrders: 0 
+  };
+  
+  const recentOrders = getRecentOrders(5) || [];
 
   // Get status badge color
   const getStatusColor = (status) => {
@@ -45,7 +64,7 @@ const DashboardPage = () => {
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold text-secondary-900">Dashboard</h1>
-          <p className="text-secondary-500">Welcome back! Here's what's happening today.</p>
+          <p className="text-secondary-500">Overview of store performance across all regions.</p>
         </div>
         <div className="flex items-center gap-3">
           <Link to="/admin/products/add">
@@ -60,25 +79,25 @@ const DashboardPage = () => {
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
         <StatsCard
           title="Total Revenue"
-          value={formatPrice(orderStats.totalRevenue)}
+          value={formatPrice(orderStats.totalRevenue || 0)}
           icon={PoundSterling}
           color="green"
           trend="up"
-          trendValue="12.5%"
+          trendValue="0%"
           loading={loading}
         />
         <StatsCard
           title="Total Orders"
-          value={orderStats.totalOrders}
+          value={orderStats.totalOrders || 0}
           icon={ShoppingCart}
           color="blue"
           trend="up"
-          trendValue="8.2%"
+          trendValue="0%"
           loading={loading}
         />
         <StatsCard
           title="Total Products"
-          value={productStats.totalProducts}
+          value={totalProducts || 0}
           icon={Package}
           color="primary"
           loading={loading}
@@ -89,7 +108,7 @@ const DashboardPage = () => {
           icon={TrendingUp}
           color="orange"
           trend="up"
-          trendValue="3.1%"
+          trendValue="0%"
           loading={loading}
         />
       </div>
@@ -118,6 +137,9 @@ const DashboardPage = () => {
                     Customer
                   </th>
                   <th className="text-left py-3 px-6 text-xs font-semibold text-secondary-500 uppercase tracking-wider">
+                    Country
+                  </th>
+                  <th className="text-left py-3 px-6 text-xs font-semibold text-secondary-500 uppercase tracking-wider">
                     Total
                   </th>
                   <th className="text-left py-3 px-6 text-xs font-semibold text-secondary-500 uppercase tracking-wider">
@@ -139,8 +161,13 @@ const DashboardPage = () => {
                         <p className="font-medium text-secondary-900">{order.customerName}</p>
                         <p className="text-sm text-secondary-500">{order.customerEmail}</p>
                       </td>
+                      <td className="py-4 px-6">
+                        <span className="inline-flex items-center px-2 py-1 bg-secondary-100 text-xs font-medium rounded text-secondary-700 uppercase">
+                          {order.country === 'india' ? '🇮🇳 IN' : '🇬🇧 UK'}
+                        </span>
+                      </td>
                       <td className="py-4 px-6 font-medium text-secondary-900">
-                        {formatPrice(order.total)}
+                        {order.country === 'india' ? '₹' : '£'}{order.total.toFixed(2)}
                       </td>
                       <td className="py-4 px-6">
                         <span className={`badge ${getStatusColor(order.status)}`}>
@@ -158,7 +185,7 @@ const DashboardPage = () => {
                   ))
                 ) : (
                   <tr>
-                    <td colSpan="5" className="py-8 text-center text-secondary-500">
+                    <td colSpan="6" className="py-8 text-center text-secondary-500">
                       No orders yet.
                     </td>
                   </tr>
@@ -180,7 +207,7 @@ const DashboardPage = () => {
                   <div className="w-3 h-3 rounded-full bg-yellow-500"></div>
                   <span className="text-secondary-600">Pending</span>
                 </div>
-                <span className="font-semibold text-secondary-900">{orderStats.pendingOrders}</span>
+                <span className="font-semibold text-secondary-900">{orderStats.pendingOrders || 0}</span>
               </div>
               
               <div className="flex items-center justify-between">
@@ -188,7 +215,7 @@ const DashboardPage = () => {
                   <div className="w-3 h-3 rounded-full bg-blue-500"></div>
                   <span className="text-secondary-600">Processing</span>
                 </div>
-                <span className="font-semibold text-secondary-900">{orderStats.processingOrders}</span>
+                <span className="font-semibold text-secondary-900">{orderStats.processingOrders || 0}</span>
               </div>
               
               <div className="flex items-center justify-between">
@@ -196,7 +223,7 @@ const DashboardPage = () => {
                   <div className="w-3 h-3 rounded-full bg-indigo-500"></div>
                   <span className="text-secondary-600">Shipped</span>
                 </div>
-                <span className="font-semibold text-secondary-900">{orderStats.shippedOrders}</span>
+                <span className="font-semibold text-secondary-900">{orderStats.shippedOrders || 0}</span>
               </div>
               
               <div className="flex items-center justify-between">
@@ -204,7 +231,7 @@ const DashboardPage = () => {
                   <div className="w-3 h-3 rounded-full bg-green-500"></div>
                   <span className="text-secondary-600">Delivered</span>
                 </div>
-                <span className="font-semibold text-secondary-900">{orderStats.deliveredOrders}</span>
+                <span className="font-semibold text-secondary-900">{orderStats.deliveredOrders || 0}</span>
               </div>
               
               <div className="flex items-center justify-between">
@@ -212,7 +239,7 @@ const DashboardPage = () => {
                   <div className="w-3 h-3 rounded-full bg-red-500"></div>
                   <span className="text-secondary-600">Cancelled</span>
                 </div>
-                <span className="font-semibold text-secondary-900">{orderStats.cancelledOrders}</span>
+                <span className="font-semibold text-secondary-900">{orderStats.cancelledOrders || 0}</span>
               </div>
             </div>
           </div>
@@ -227,7 +254,7 @@ const DashboardPage = () => {
                   <p className="font-medium text-red-700">Out of Stock</p>
                   <p className="text-sm text-red-600">Products need restocking</p>
                 </div>
-                <span className="text-2xl font-bold text-red-700">{productStats.outOfStockProducts}</span>
+                <span className="text-2xl font-bold text-red-700">{totalOutOfStock || 0}</span>
               </div>
               
               <div className="flex items-center justify-between p-3 bg-yellow-50 rounded-lg">
@@ -235,7 +262,7 @@ const DashboardPage = () => {
                   <p className="font-medium text-yellow-700">Low Stock</p>
                   <p className="text-sm text-yellow-600">Less than 10 items</p>
                 </div>
-                <span className="text-2xl font-bold text-yellow-700">{productStats.lowStockProducts}</span>
+                <span className="text-2xl font-bold text-yellow-700">{totalLowStock || 0}</span>
               </div>
               
               <div className="flex items-center justify-between p-3 bg-green-50 rounded-lg">
@@ -243,7 +270,7 @@ const DashboardPage = () => {
                   <p className="font-medium text-green-700">Total Stock</p>
                   <p className="text-sm text-green-600">All products</p>
                 </div>
-                <span className="text-2xl font-bold text-green-700">{productStats.totalStock}</span>
+                <span className="text-2xl font-bold text-green-700">{totalStock || 0}</span>
               </div>
             </div>
 
@@ -253,23 +280,6 @@ const DashboardPage = () => {
               </Button>
             </Link>
           </div>
-        </div>
-      </div>
-
-      {/* Category Distribution */}
-      <div className="bg-white rounded-xl shadow-sm border border-secondary-100 p-6">
-        <h2 className="text-lg font-semibold text-secondary-900 mb-6">Products by Category</h2>
-        
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-4">
-          {productStats.categoryCounts?.map((category, index) => (
-            <div 
-              key={index}
-              className="bg-secondary-50 rounded-lg p-4 text-center hover:bg-secondary-100 transition-colors"
-            >
-              <p className="text-2xl font-bold text-primary-600 mb-1">{category.count}</p>
-              <p className="text-sm text-secondary-600">{category.name}</p>
-            </div>
-          ))}
         </div>
       </div>
     </div>

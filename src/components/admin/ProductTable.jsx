@@ -7,17 +7,19 @@ import {
   Search, 
   Filter,
   ChevronLeft,
-  ChevronRight
+  ChevronRight,
+  Globe
 } from 'lucide-react';
 import { useProducts } from '../../context/ProductContext';
 import { useSettings } from '../../context/SettingsContext';
+import { useCountry } from '../../context/CountryContext';
 import { ConfirmModal } from '../common/Modal';
 import { useToast } from '../common/Toast';
 import Button, { IconButton } from '../common/Button';
 
 const ProductTable = () => {
   const { products, deleteProduct, loading } = useProducts();
-  const { formatPrice } = useSettings();
+  const { countryConfig } = useCountry();
   const toast = useToast();
 
   const [searchTerm, setSearchTerm] = useState('');
@@ -26,17 +28,25 @@ const ProductTable = () => {
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [productToDelete, setProductToDelete] = useState(null);
   const [filterCategory, setFilterCategory] = useState('All');
+  const [filterCountry, setFilterCountry] = useState('All');
+
+  // Flatten products with country info
+  const allProducts = [
+    ...(products.uk || []).map(p => ({ ...p, country: 'uk' })),
+    ...(products.india || []).map(p => ({ ...p, country: 'india' }))
+  ];
 
   // Unique categories for filter
-  const categories = ['All', ...new Set(products.map(p => p.category))];
+  const categories = ['All', ...new Set(allProducts.map(p => p.category))];
 
   // Filter products
-  const filteredProducts = products.filter(product => {
+  const filteredProducts = allProducts.filter(product => {
     const matchesSearch = product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
                           product.category.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesCategory = filterCategory === 'All' || product.category === filterCategory;
+    const matchesCountry = filterCountry === 'All' || product.country === filterCountry;
     
-    return matchesSearch && matchesCategory;
+    return matchesSearch && matchesCategory && matchesCountry;
   });
 
   // Pagination logic
@@ -56,7 +66,7 @@ const ProductTable = () => {
 
   const confirmDelete = () => {
     if (productToDelete) {
-      deleteProduct(productToDelete.id);
+      deleteProduct(productToDelete.id, productToDelete.country);
       toast.success('Product deleted successfully');
       setDeleteModalOpen(false);
       setProductToDelete(null);
@@ -64,10 +74,13 @@ const ProductTable = () => {
   };
 
   // Render Status Badge
-  const renderStatus = (stock) => {
-    if (stock === 0) {
+  const renderStatus = (product) => {
+    if (product.enabled === false) {
+      return <span className="badge bg-gray-100 text-gray-700">Disabled</span>;
+    }
+    if (product.stock === 0) {
       return <span className="badge bg-red-100 text-red-700">Out of Stock</span>;
-    } else if (stock < 10) {
+    } else if (product.stock < 10) {
       return <span className="badge bg-yellow-100 text-yellow-700">Low Stock</span>;
     }
     return <span className="badge bg-green-100 text-green-700">In Stock</span>;
@@ -99,7 +112,22 @@ const ProductTable = () => {
         </div>
 
         {/* Filters */}
-        <div className="flex items-center gap-2 w-full sm:w-auto overflow-x-auto pb-2 sm:pb-0">
+        <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">
+          {/* Country Filter */}
+          <div className="relative flex-shrink-0">
+            <select
+              value={filterCountry}
+              onChange={(e) => setFilterCountry(e.target.value)}
+              className="pl-9 pr-8 py-2 border border-secondary-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 text-sm appearance-none bg-white cursor-pointer"
+            >
+              <option value="All">All Countries</option>
+              <option value="uk">United Kingdom</option>
+              <option value="india">India</option>
+            </select>
+            <Globe size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-secondary-500" />
+          </div>
+
+          {/* Category Filter */}
           <div className="relative flex-shrink-0">
             <select
               value={filterCategory}
@@ -122,6 +150,7 @@ const ProductTable = () => {
             <tr>
               <th className="w-16">Image</th>
               <th>Product Name</th>
+              <th>Country</th>
               <th>Category</th>
               <th>Price</th>
               <th>Stock</th>
@@ -131,58 +160,62 @@ const ProductTable = () => {
           </thead>
           <tbody className="divide-y divide-secondary-100">
             {currentItems.length > 0 ? (
-              currentItems.map((product) => (
-                <tr key={product.id} className="group hover:bg-secondary-50 transition-colors">
-                  <td className="py-3 px-6">
-                    <div className="w-10 h-10 rounded-lg bg-secondary-100 overflow-hidden">
-                      <img 
-                        src={product.image} 
-                        alt={product.name} 
-                        className="w-full h-full object-cover"
-                        onError={(e) => { e.target.src = 'https://via.placeholder.com/40'; }}
-                      />
-                    </div>
-                  </td>
-                  <td className="py-3 px-6">
-                    <p className="font-medium text-secondary-900 line-clamp-1">{product.name}</p>
-                    <p className="text-xs text-secondary-500">ID: #{product.id}</p>
-                  </td>
-                  <td className="py-3 px-6 text-secondary-600">{product.category}</td>
-                  <td className="py-3 px-6 font-medium text-secondary-900">{formatPrice(product.price)}</td>
-                  <td className="py-3 px-6 text-secondary-600">{product.stock}</td>
-                  <td className="py-3 px-6">{renderStatus(product.stock)}</td>
-                  <td className="py-3 px-6 text-right">
-                    <div className="flex items-center justify-end gap-2">
-                      <Link to={`/product/${product.id}`} target="_blank">
-                        <IconButton 
-                          icon={Eye} 
-                          variant="ghost" 
-                          size="sm" 
-                          className="text-secondary-400 hover:text-secondary-700"
+              currentItems.map((product) => {
+                const currencySymbol = countryConfig[product.country]?.currency?.symbol || '£';
+                const flag = countryConfig[product.country]?.flag || '';
+                
+                return (
+                  <tr key={`${product.country}-${product.id}`} className="group hover:bg-secondary-50 transition-colors">
+                    <td className="py-3 px-6">
+                      <div className="w-10 h-10 rounded-lg bg-secondary-100 overflow-hidden">
+                        <img 
+                          src={product.image} 
+                          alt={product.name} 
+                          className="w-full h-full object-cover"
+                          onError={(e) => { e.target.src = 'https://via.placeholder.com/40'; }}
                         />
-                      </Link>
-                      <Link to={`/admin/products/edit/${product.id}`}>
+                      </div>
+                    </td>
+                    <td className="py-3 px-6">
+                      <p className="font-medium text-secondary-900 line-clamp-1">{product.name}</p>
+                      <p className="text-xs text-secondary-500">ID: #{product.id}</p>
+                    </td>
+                    <td className="py-3 px-6">
+                      <span className="inline-flex items-center gap-1 text-sm text-secondary-700 bg-secondary-100 px-2 py-1 rounded">
+                        {flag} <span className="uppercase">{product.country}</span>
+                      </span>
+                    </td>
+                    <td className="py-3 px-6 text-secondary-600">{product.category}</td>
+                    <td className="py-3 px-6 font-medium text-secondary-900">
+                      {currencySymbol}{product.price.toFixed(2)}
+                    </td>
+                    <td className="py-3 px-6 text-secondary-600">{product.stock}</td>
+                    <td className="py-3 px-6">{renderStatus(product)}</td>
+                    <td className="py-3 px-6 text-right">
+                      <div className="flex items-center justify-end gap-2">
+                        <Link to={`/admin/products/edit/${product.id}?country=${product.country}`}>
+                          <IconButton 
+                            icon={Edit} 
+                            variant="ghost" 
+                            size="sm" 
+                            className="text-blue-500 hover:text-blue-700 hover:bg-blue-50"
+                          />
+                        </Link>
                         <IconButton 
-                          icon={Edit} 
+                          icon={Trash2} 
                           variant="ghost" 
-                          size="sm" 
-                          className="text-blue-500 hover:text-blue-700 hover:bg-blue-50"
+                          size="sm"
+                          onClick={() => handleDeleteClick(product)}
+                          className="text-red-500 hover:text-red-700 hover:bg-red-50"
                         />
-                      </Link>
-                      <IconButton 
-                        icon={Trash2} 
-                        variant="ghost" 
-                        size="sm"
-                        onClick={() => handleDeleteClick(product)}
-                        className="text-red-500 hover:text-red-700 hover:bg-red-50"
-                      />
-                    </div>
-                  </td>
-                </tr>
-              ))
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })
             ) : (
               <tr>
-                <td colSpan="7" className="text-center py-12 text-secondary-500">
+                <td colSpan="8" className="text-center py-12 text-secondary-500">
                   No products found matching your criteria.
                 </td>
               </tr>
