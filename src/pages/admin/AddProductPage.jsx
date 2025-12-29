@@ -29,11 +29,11 @@ const AddProductPage = () => {
       <div className="bg-blue-50 border border-blue-200 rounded-xl p-4">
         <h3 className="font-semibold text-blue-800 mb-2">Tips for adding products:</h3>
         <ul className="text-sm text-blue-700 space-y-1 list-disc list-inside">
+          <li>Select the correct country (India or UK) for pricing and currency</li>
           <li>Use high-quality images for better customer experience</li>
           <li>Write detailed descriptions including material, care instructions, and fit</li>
           <li>Set competitive prices by researching similar products</li>
           <li>Add multiple sizes and colors to maximize sales potential</li>
-          <li>Mark products as "Featured" or "New Arrival" to increase visibility</li>
         </ul>
       </div>
 

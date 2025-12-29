@@ -1,31 +1,57 @@
 import React, { useEffect, useState } from 'react';
-import { Link, useParams, useNavigate } from 'react-router-dom';
+import { Link, useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { ArrowLeft, Edit, Package } from 'lucide-react';
 import ProductForm from '../../components/admin/ProductForm';
 import Button from '../../components/common/Button';
 import { useProducts } from '../../context/ProductContext';
 import { useToast } from '../../components/common/Toast';
+import { useCountry } from '../../context/CountryContext';
 
 const EditProductPage = () => {
   const { id } = useParams();
+  const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const { getProductById, loading } = useProducts();
+  const { countryConfig, formatPrice } = useCountry();
   const toast = useToast();
   
   const [product, setProduct] = useState(null);
   const [notFound, setNotFound] = useState(false);
+  const [productCountry, setProductCountry] = useState(null);
 
   // Fetch product on mount
   useEffect(() => {
-    const productData = getProductById(id);
+    // Check if country is in query param, otherwise search all
+    const countryParam = searchParams.get('country');
     
-    if (productData) {
-      setProduct(productData);
-    } else {
+    if (countryParam) {
+      const productData = getProductById(id, countryParam);
+      if (productData) {
+        setProduct(productData);
+        setProductCountry(countryParam);
+        return;
+      }
+    }
+
+    // Search in all countries if not found
+    const countries = Object.keys(countryConfig);
+    let found = false;
+
+    for (const code of countries) {
+      const productData = getProductById(id, code);
+      if (productData) {
+        setProduct(productData);
+        setProductCountry(code);
+        found = true;
+        break;
+      }
+    }
+
+    if (!found && !loading) {
       setNotFound(true);
       toast.error('Product not found');
     }
-  }, [id, getProductById]);
+  }, [id, getProductById, loading, searchParams, countryConfig]);
 
   // Loading state
   if (loading) {
@@ -65,6 +91,8 @@ const EditProductPage = () => {
     );
   }
 
+  const currencySymbol = countryConfig[productCountry]?.currency?.symbol || '£';
+
   return (
     <div className="space-y-6">
       {/* Page Header */}
@@ -98,8 +126,12 @@ const EditProductPage = () => {
           <h3 className="font-semibold text-secondary-900 truncate">{product.name}</h3>
           <div className="flex items-center gap-4 mt-1">
             <span className="text-sm text-secondary-500">ID: #{product.id}</span>
-            <span className="text-sm text-secondary-500">Category: {product.category}</span>
-            <span className="text-sm font-medium text-primary-600">${product.price.toFixed(2)}</span>
+            <span className="text-sm text-secondary-500">
+              Country: {countryConfig[productCountry]?.flag} {countryConfig[productCountry]?.name}
+            </span>
+            <span className="text-sm font-medium text-primary-600">
+              {currencySymbol}{product.price.toFixed(2)}
+            </span>
           </div>
         </div>
         <div className="hidden sm:flex items-center gap-2">
@@ -116,7 +148,11 @@ const EditProductPage = () => {
       </div>
 
       {/* Product Form */}
-      <ProductForm mode="edit" initialData={product} />
+      <ProductForm 
+        mode="edit" 
+        initialData={product} 
+        initialCountry={productCountry}
+      />
     </div>
   );
 };

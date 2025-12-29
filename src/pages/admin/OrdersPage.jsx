@@ -2,19 +2,21 @@ import React from 'react';
 import { ShoppingCart, DollarSign, Clock, CheckCircle } from 'lucide-react';
 import OrderTable from '../../components/admin/OrderTable';
 import { useOrders } from '../../context/OrderContext';
+import { useSettings } from '../../context/SettingsContext';
 
 const OrdersPage = () => {
-  const { orders, getOrderStats } = useOrders();
-  const stats = getOrderStats();
-
-  // Format currency
-  const formatCurrency = (amount) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD',
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0
-    }).format(amount);
+  const { getOrderStats } = useOrders();
+  const { formatPrice } = useSettings();
+  
+  // Safely get stats
+  const stats = getOrderStats() || { 
+    totalOrders: 0, 
+    totalRevenue: 0, 
+    pendingOrders: 0, 
+    deliveredOrders: 0,
+    processingOrders: 0,
+    shippedOrders: 0,
+    cancelledOrders: 0
   };
 
   return (
@@ -27,7 +29,7 @@ const OrdersPage = () => {
             Orders
           </h1>
           <p className="text-secondary-500 mt-1">
-            Manage and track all customer orders ({orders.length} total orders)
+            Manage and track all customer orders ({stats.totalOrders} total orders)
           </p>
         </div>
       </div>
@@ -52,7 +54,7 @@ const OrdersPage = () => {
           </div>
           <div>
             <p className="text-sm text-secondary-500">Total Revenue</p>
-            <p className="text-2xl font-bold text-secondary-900">{formatCurrency(stats.totalRevenue)}</p>
+            <p className="text-2xl font-bold text-secondary-900">{formatPrice(stats.totalRevenue)}</p>
           </div>
         </div>
 
