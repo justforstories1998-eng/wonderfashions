@@ -11,11 +11,10 @@ import {
   Globe
 } from 'lucide-react';
 import { useProducts } from '../../context/ProductContext';
-import { useSettings } from '../../context/SettingsContext';
 import { useCountry } from '../../context/CountryContext';
 import { ConfirmModal } from '../common/Modal';
 import { useToast } from '../common/Toast';
-import Button, { IconButton } from '../common/Button';
+import { IconButton } from '../common/Button';
 
 const ProductTable = () => {
   const { products, deleteProduct, loading } = useProducts();
@@ -42,7 +41,7 @@ const ProductTable = () => {
   // Filter products
   const filteredProducts = allProducts.filter(product => {
     const matchesSearch = product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                          product.category.toLowerCase().includes(searchTerm.toLowerCase());
+                          product.category?.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesCategory = filterCategory === 'All' || product.category === filterCategory;
     const matchesCountry = filterCountry === 'All' || product.country === filterCountry;
     
@@ -73,24 +72,21 @@ const ProductTable = () => {
     }
   };
 
-<<<<<<< HEAD
   // Render Status Badge
-  const renderStatus = (product) => {
-=======
-  // Render Status Badge - UPDATED with Expiration
   const renderStatus = (product) => {
     // Check Expiration
     if (product.expiresAt && new Date(product.expiresAt) < new Date()) {
       return <span className="badge bg-gray-200 text-gray-600 font-medium">Expired</span>;
     }
 
->>>>>>> temp-fix
     if (product.enabled === false) {
       return <span className="badge bg-gray-100 text-gray-700">Disabled</span>;
     }
-    if (product.stock === 0) {
+    
+    const stockCount = parseInt(product.stock) || 0;
+    if (stockCount === 0) {
       return <span className="badge bg-red-100 text-red-700">Out of Stock</span>;
-    } else if (product.stock < 10) {
+    } else if (stockCount < 10) {
       return <span className="badge bg-yellow-100 text-yellow-700">Low Stock</span>;
     }
     return <span className="badge bg-green-100 text-green-700">In Stock</span>;
@@ -98,51 +94,47 @@ const ProductTable = () => {
 
   if (loading) {
     return (
-      <div className="bg-white rounded-xl shadow-sm p-8 text-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600 mx-auto"></div>
-        <p className="mt-4 text-secondary-500">Loading products...</p>
+      <div className="bg-white rounded-xl shadow-sm p-8 text-center border border-secondary-200">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-800 mx-auto"></div>
+        <p className="mt-4 text-secondary-600 font-sans">Loading your inventory...</p>
       </div>
     );
   }
 
   return (
-    <div className="bg-white rounded-xl shadow-sm border border-secondary-200 flex flex-col h-full">
+    <div className="bg-white rounded-xl shadow-sm border border-secondary-200 flex flex-col h-full overflow-hidden">
       {/* Table Header / Toolbar */}
-      <div className="p-4 border-b border-secondary-200 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        {/* Search */}
+      <div className="p-4 border-b border-secondary-200 flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-secondary-50/50">
         <div className="relative w-full sm:w-64">
           <input
             type="text"
             placeholder="Search products..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full pl-10 pr-4 py-2 border border-secondary-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 text-sm"
+            className="w-full pl-10 pr-4 py-2 border border-secondary-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-700 text-sm font-sans"
           />
           <Search size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-secondary-400" />
         </div>
 
-        {/* Filters */}
         <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">
-          {/* Country Filter */}
           <div className="relative flex-shrink-0">
             <select
               value={filterCountry}
               onChange={(e) => setFilterCountry(e.target.value)}
-              className="pl-9 pr-8 py-2 border border-secondary-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 text-sm appearance-none bg-white cursor-pointer"
+              className="pl-9 pr-8 py-2 border border-secondary-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-700 text-sm appearance-none bg-white cursor-pointer font-sans"
             >
-              <option value="All">All Countries</option>
-              <option value="uk">United Kingdom</option>
-              <option value="india">India</option>
+              <option value="All">All Regions</option>
+              <option value="uk">UK 🇬🇧</option>
+              <option value="india">India 🇮🇳</option>
             </select>
             <Globe size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-secondary-500" />
           </div>
 
-          {/* Category Filter */}
           <div className="relative flex-shrink-0">
             <select
               value={filterCategory}
               onChange={(e) => setFilterCategory(e.target.value)}
-              className="pl-9 pr-8 py-2 border border-secondary-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 text-sm appearance-none bg-white cursor-pointer"
+              className="pl-9 pr-8 py-2 border border-secondary-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-700 text-sm appearance-none bg-white cursor-pointer font-sans"
             >
               {categories.map((cat, idx) => (
                 <option key={idx} value={cat}>{cat}</option>
@@ -155,17 +147,16 @@ const ProductTable = () => {
 
       {/* Table Content */}
       <div className="overflow-x-auto flex-grow">
-        <table className="table w-full">
+        <table className="w-full text-left border-collapse">
           <thead>
-            <tr>
-              <th className="w-16">Image</th>
-              <th>Product Name</th>
-              <th>Country</th>
-              <th>Category</th>
-              <th>Price</th>
-              <th>Stock</th>
-              <th>Status</th>
-              <th className="text-right">Actions</th>
+            <tr className="bg-secondary-50 border-b border-secondary-200">
+              <th className="px-6 py-4 text-xs font-bold text-secondary-700 uppercase tracking-widest font-sans">Image</th>
+              <th className="px-6 py-4 text-xs font-bold text-secondary-700 uppercase tracking-widest font-sans">Product Name</th>
+              <th className="px-6 py-4 text-xs font-bold text-secondary-700 uppercase tracking-widest font-sans">Region</th>
+              <th className="px-6 py-4 text-xs font-bold text-secondary-700 uppercase tracking-widest font-sans">Price</th>
+              <th className="px-6 py-4 text-xs font-bold text-secondary-700 uppercase tracking-widest font-sans">Stock</th>
+              <th className="px-6 py-4 text-xs font-bold text-secondary-700 uppercase tracking-widest font-sans">Status</th>
+              <th className="px-6 py-4 text-xs font-bold text-secondary-700 uppercase tracking-widest font-sans text-right">Actions</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-secondary-100">
@@ -175,48 +166,49 @@ const ProductTable = () => {
                 const flag = countryConfig[product.country]?.flag || '';
                 
                 return (
-                  <tr key={`${product.country}-${product.id}`} className="group hover:bg-secondary-50 transition-colors">
-                    <td className="py-3 px-6">
-                      <div className="w-10 h-10 rounded-lg bg-secondary-100 overflow-hidden">
+                  <tr key={`${product.country}-${product.id}`} className="group hover:bg-secondary-50/50 transition-colors">
+                    <td className="px-6 py-4">
+                      <div className="w-12 h-12 rounded bg-secondary-100 overflow-hidden border border-secondary-200 shadow-sm">
                         <img 
                           src={product.image} 
                           alt={product.name} 
                           className="w-full h-full object-cover"
-                          onError={(e) => { e.target.src = 'https://via.placeholder.com/40'; }}
+                          onError={(e) => { e.target.src = 'https://via.placeholder.com/100?text=No+Image'; }}
                         />
                       </div>
                     </td>
-                    <td className="py-3 px-6">
-                      <p className="font-medium text-secondary-900 line-clamp-1">{product.name}</p>
-                      <p className="text-xs text-secondary-500">ID: #{product.id}</p>
+                    <td className="px-6 py-4">
+                      <p className="font-bold text-secondary-900 line-clamp-1 font-display">{product.name}</p>
+                      <p className="text-[10px] text-secondary-400 font-sans tracking-tight">ID: {product.id}</p>
                     </td>
-                    <td className="py-3 px-6">
-                      <span className="inline-flex items-center gap-1 text-sm text-secondary-700 bg-secondary-100 px-2 py-1 rounded">
-                        {flag} <span className="uppercase">{product.country}</span>
+                    <td className="px-6 py-4">
+                      <span className="inline-flex items-center gap-1.5 text-xs font-bold text-secondary-700 bg-secondary-100 px-2 py-1 rounded uppercase">
+                        {flag} {product.country}
                       </span>
                     </td>
-                    <td className="py-3 px-6 text-secondary-600">{product.category}</td>
-                    <td className="py-3 px-6 font-medium text-secondary-900">
-                      {currencySymbol}{product.price.toFixed(2)}
+                    <td className="px-6 py-4 font-bold text-primary-800 font-sans">
+                      {currencySymbol}{parseFloat(product.price).toFixed(2)}
                     </td>
-                    <td className="py-3 px-6 text-secondary-600">{product.stock}</td>
-                    <td className="py-3 px-6">{renderStatus(product)}</td>
-                    <td className="py-3 px-6 text-right">
-                      <div className="flex items-center justify-end gap-2">
+                    <td className="px-6 py-4 text-secondary-600 font-sans">
+                      {product.stock}
+                    </td>
+                    <td className="px-6 py-4">
+                      {renderStatus(product)}
+                    </td>
+                    <td className="px-6 py-4 text-right">
+                      <div className="flex items-center justify-end gap-1">
                         <Link to={`/admin/products/edit/${product.id}?country=${product.country}`}>
                           <IconButton 
                             icon={Edit} 
                             variant="ghost" 
-                            size="sm" 
-                            className="text-blue-500 hover:text-blue-700 hover:bg-blue-50"
+                            className="text-blue-600 hover:bg-blue-50"
                           />
                         </Link>
                         <IconButton 
                           icon={Trash2} 
                           variant="ghost" 
-                          size="sm"
                           onClick={() => handleDeleteClick(product)}
-                          className="text-red-500 hover:text-red-700 hover:bg-red-50"
+                          className="text-red-600 hover:bg-red-50"
                         />
                       </div>
                     </td>
@@ -225,8 +217,8 @@ const ProductTable = () => {
               })
             ) : (
               <tr>
-                <td colSpan="8" className="text-center py-12 text-secondary-500">
-                  No products found matching your criteria.
+                <td colSpan="7" className="text-center py-20 text-secondary-500 font-sans">
+                  No products found. Add some products to see them here!
                 </td>
               </tr>
             )}
@@ -236,41 +228,30 @@ const ProductTable = () => {
 
       {/* Pagination */}
       {filteredProducts.length > itemsPerPage && (
-        <div className="p-4 border-t border-secondary-200 flex items-center justify-between">
-          <p className="text-sm text-secondary-500">
-            Showing <span className="font-medium">{indexOfFirstItem + 1}</span> to <span className="font-medium">{Math.min(indexOfLastItem, filteredProducts.length)}</span> of <span className="font-medium">{filteredProducts.length}</span> results
+        <div className="p-4 border-t border-secondary-200 flex items-center justify-between bg-secondary-50/30">
+          <p className="text-xs text-secondary-500 font-sans">
+            Showing <span className="font-bold">{indexOfFirstItem + 1}</span> to <span className="font-bold">{Math.min(indexOfLastItem, filteredProducts.length)}</span> of <span className="font-bold">{filteredProducts.length}</span> items
           </p>
           
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1">
             <button
               onClick={() => handlePageChange(currentPage - 1)}
               disabled={currentPage === 1}
-              className="p-2 rounded-lg border border-secondary-300 hover:bg-secondary-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              className="p-2 rounded hover:bg-white border border-transparent hover:border-secondary-200 disabled:opacity-30 transition-all"
             >
-              <ChevronLeft size={16} />
+              <ChevronLeft size={18} />
             </button>
             
-            {Array.from({ length: totalPages }, (_, i) => i + 1).map(number => (
-              <button
-                key={number}
-                onClick={() => handlePageChange(number)}
-                className={`
-                  w-8 h-8 rounded-lg text-sm font-medium transition-colors
-                  ${currentPage === number 
-                    ? 'bg-primary-600 text-white' 
-                    : 'text-secondary-600 hover:bg-secondary-50 border border-secondary-200'}
-                `}
-              >
-                {number}
-              </button>
-            ))}
+            <span className="px-4 text-sm font-bold text-secondary-700 font-sans">
+              Page {currentPage} of {totalPages}
+            </span>
 
             <button
               onClick={() => handlePageChange(currentPage + 1)}
               disabled={currentPage === totalPages}
-              className="p-2 rounded-lg border border-secondary-300 hover:bg-secondary-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              className="p-2 rounded hover:bg-white border border-transparent hover:border-secondary-200 disabled:opacity-30 transition-all"
             >
-              <ChevronRight size={16} />
+              <ChevronRight size={18} />
             </button>
           </div>
         </div>
@@ -281,9 +262,9 @@ const ProductTable = () => {
         isOpen={deleteModalOpen}
         onClose={() => setDeleteModalOpen(false)}
         onConfirm={confirmDelete}
-        title="Delete Product"
-        message={`Are you sure you want to delete "${productToDelete?.name}"? This action cannot be undone.`}
-        confirmText="Delete"
+        title="Remove Product"
+        message={`This will permanently delete "${productToDelete?.name}" from your store. Continue?`}
+        confirmText="Remove"
         variant="danger"
       />
     </div>

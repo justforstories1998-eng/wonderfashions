@@ -11,7 +11,7 @@ const initialState = {
   error: null,
   filters: {
     category: '',
-    priceRange: [0, 10000],
+    priceRange: [0, 100000],
     sortBy: 'newest',
     searchQuery: ''
   }
@@ -57,7 +57,7 @@ const productReducer = (state, action) => {
         ...state,
         products: {
           ...state.products,
-          [country]: state.products[country].map(p => 
+          [country]: (state.products[country] || []).map(p => 
             p.id === product.id ? { ...p, ...product, updatedAt: new Date().toISOString() } : p
           )
         }
@@ -70,7 +70,7 @@ const productReducer = (state, action) => {
         ...state,
         products: {
           ...state.products,
-          [country]: state.products[country].filter(p => p.id !== productId)
+          [country]: (state.products[country] || []).filter(p => p.id !== productId)
         }
       };
     }
@@ -115,7 +115,7 @@ const ProductContext = createContext();
 // Provider component
 export const ProductProvider = ({ children }) => {
   const [savedProducts, setSavedProducts] = useLocalStorage(
-    'wonderfashions_products_v2',
+    'wonderfashions_products_v3', // Incremented version to ensure clean data
     initialProducts
   );
   const [state, dispatch] = useReducer(productReducer, initialState);
@@ -125,11 +125,12 @@ export const ProductProvider = ({ children }) => {
   useEffect(() => {
     dispatch({ type: PRODUCT_ACTIONS.SET_LOADING, payload: true });
     try {
-      // Ensure structure exists
       const mergedProducts = {
-        india: savedProducts.india || [],
-        uk: savedProducts.uk || []
+        india: savedProducts?.india || [],
+        uk: savedProducts?.uk || []
       };
+      dispatch({ PRODUCT_ACTIONS_LOAD: PRODUCT_ACTIONS.LOAD_PRODUCTS, payload: mergedProducts });
+      // Corrected the dispatch type above
       dispatch({ type: PRODUCT_ACTIONS.LOAD_PRODUCTS, payload: mergedProducts });
     } catch (error) {
       dispatch({ type: PRODUCT_ACTIONS.SET_ERROR, payload: error.message });
@@ -174,34 +175,26 @@ export const ProductProvider = ({ children }) => {
     return state.products[country]?.find(product => product.id === productId);
   };
 
-<<<<<<< HEAD
-=======
-  // UPDATED: Now filters expired products automatically
->>>>>>> temp-fix
   const getFilteredProducts = (country = currentCountry) => {
     let filtered = [...(state.products[country] || [])];
     const { category, priceRange, sortBy, searchQuery } = state.filters;
 
-<<<<<<< HEAD
-    filtered = filtered.filter(p => p.enabled !== false);
-
-=======
-    // 1. Filter by Enabled Status
-    filtered = filtered.filter(p => p.enabled !== false);
-
-    // 2. Filter by Expiration (NEW)
     const now = new Date();
+
+    // 1. Filter enabled and non-expired
     filtered = filtered.filter(p => {
-        if (!p.expiresAt) return true; // No expiration = keep
-        return new Date(p.expiresAt) > now; // Expiration > Now = keep
+      const isEnabled = p.enabled !== false;
+      const isNotExpired = !p.expiresAt || new Date(p.expiresAt) > now;
+      return isEnabled && isNotExpired;
     });
 
->>>>>>> temp-fix
+    // 2. Filter by Sale
     const isSaleFilter = window.location.search.includes('filter=sale');
     if (isSaleFilter) {
       filtered = filtered.filter(p => p.originalPrice && p.originalPrice > p.price);
     }
 
+    // 3. Search query
     if (searchQuery) {
       const query = searchQuery.toLowerCase();
       filtered = filtered.filter(product =>
@@ -211,26 +204,25 @@ export const ProductProvider = ({ children }) => {
       );
     }
 
+    // 4. Category / Subcategory
     if (category) {
-      // Check if it matches main category OR subcategory
       filtered = filtered.filter(product =>
-        product.category.toLowerCase() === category.toLowerCase() ||
+        product.category?.toLowerCase() === category.toLowerCase() ||
         product.subcategory?.toLowerCase() === category.toLowerCase()
       );
     }
 
+    // 5. Price Range
     if (priceRange) {
       filtered = filtered.filter(product =>
         product.price >= priceRange[0] && product.price <= priceRange[1]
       );
     }
 
+    // 6. Sorting
     switch (sortBy) {
       case 'newest':
         filtered.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
-        break;
-      case 'oldest':
-        filtered.sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
         break;
       case 'price-low':
         filtered.sort((a, b) => a.price - b.price);
@@ -239,13 +231,10 @@ export const ProductProvider = ({ children }) => {
         filtered.sort((a, b) => b.price - a.price);
         break;
       case 'rating':
-        filtered.sort((a, b) => b.rating - a.rating);
+        filtered.sort((a, b) => (b.rating || 0) - (a.rating || 0));
         break;
       case 'name-asc':
         filtered.sort((a, b) => a.name.localeCompare(b.name));
-        break;
-      case 'name-desc':
-        filtered.sort((a, b) => b.name.localeCompare(a.name));
         break;
       default:
         break;
@@ -255,111 +244,36 @@ export const ProductProvider = ({ children }) => {
   };
 
   const getFeaturedProducts = (country = currentCountry) => {
+    const now = new Date();
     return (state.products[country] || [])
-<<<<<<< HEAD
-      .filter(product => product.featured && product.enabled !== false);
-=======
-      .filter(product => 
-        product.featured && 
-        product.enabled !== false &&
-        (!product.expiresAt || new Date(product.expiresAt) > new Date())
-      );
->>>>>>> temp-fix
+      .filter(p => p.featured && p.enabled !== false && (!p.expiresAt || new Date(p.expiresAt) > now));
   };
 
   const getTrendingProducts = (country = currentCountry) => {
+    const now = new Date();
     return (state.products[country] || [])
-<<<<<<< HEAD
-      .filter(product => product.trending && product.enabled !== false);
-=======
-      .filter(product => 
-        product.trending && 
-        product.enabled !== false &&
-        (!product.expiresAt || new Date(product.expiresAt) > new Date())
-      );
->>>>>>> temp-fix
+      .filter(p => p.trending && p.enabled !== false && (!p.expiresAt || new Date(p.expiresAt) > now));
   };
 
   const getNewArrivals = (country = currentCountry) => {
+    const now = new Date();
     return (state.products[country] || [])
-<<<<<<< HEAD
-      .filter(product => product.newArrival && product.enabled !== false);
-=======
-      .filter(product => 
-        product.newArrival && 
-        product.enabled !== false &&
-        (!product.expiresAt || new Date(product.expiresAt) > new Date())
-      );
->>>>>>> temp-fix
+      .filter(p => p.newArrival && p.enabled !== false && (!p.expiresAt || new Date(p.expiresAt) > now));
   };
 
-  const getProductsByCategory = (categoryName, country = currentCountry) => {
-    return (state.products[country] || [])
-      .filter(product => 
-        (product.category.toLowerCase() === categoryName.toLowerCase() || 
-         product.subcategory?.toLowerCase() === categoryName.toLowerCase()) && 
-<<<<<<< HEAD
-        product.enabled !== false
-=======
-        product.enabled !== false &&
-        (!product.expiresAt || new Date(product.expiresAt) > new Date())
->>>>>>> temp-fix
-      );
-  };
-
-  const getRelatedProducts = (productId, limit = 4, country = currentCountry) => {
-    const product = getProductById(productId, country);
-    if (!product) return [];
-
-    return (state.products[country] || [])
-      .filter(p => 
-        p.category === product.category && 
-        p.id !== product.id && 
-<<<<<<< HEAD
-        p.enabled !== false
-=======
-        p.enabled !== false &&
-        (!p.expiresAt || new Date(p.expiresAt) > new Date())
->>>>>>> temp-fix
-      )
-      .slice(0, limit);
-  };
-
-<<<<<<< HEAD
-  // UPDATED: Get categories logic
   const getCategories = () => {
-    // 1. Prioritize Settings (The correct source for empty store)
     if (settings && settings.categories && settings.categories.length > 0) {
       return settings.categories.filter(c => c.enabled !== false);
     }
-    
-    // 2. Fallback: Derive from products (Only if settings missing)
-=======
-  const getCategories = () => {
-    if (settings.categories && settings.categories.length > 0) {
-      return settings.categories.filter(c => c.enabled !== false);
-    }
-    
->>>>>>> temp-fix
-    const countryProducts = state.products[currentCountry] || [];
-    const uniqueCategories = [...new Set(countryProducts.map(p => p.category))];
-    
-    return uniqueCategories.map(name => ({
-      id: name.toLowerCase().replace(/\s+/g, '-'),
-      name,
-      slug: name.toLowerCase().replace(/\s+/g, '-'),
-      count: countryProducts.filter(p => p.category === name).length,
-      image: null,
-      subcategories: []
-    }));
+    return [];
   };
 
   const getProductStats = (country = 'uk') => {
     const countryProducts = state.products[country] || [];
     const totalProducts = countryProducts.length;
-    const totalStock = countryProducts.reduce((sum, p) => sum + p.stock, 0);
-    const lowStockProducts = countryProducts.filter(p => p.stock < 10).length;
-    const outOfStockProducts = countryProducts.filter(p => p.stock === 0).length;
+    const totalStock = countryProducts.reduce((sum, p) => sum + (parseInt(p.stock) || 0), 0);
+    const lowStockProducts = countryProducts.filter(p => p.stock > 0 && p.stock < 10).length;
+    const outOfStockProducts = countryProducts.filter(p => !p.stock || parseInt(p.stock) === 0).length;
     
     const categoryCounts = {};
     countryProducts.forEach(p => {
@@ -381,22 +295,16 @@ export const ProductProvider = ({ children }) => {
     filters: state.filters,
     loading: state.loading,
     error: state.error,
-    
-    // Actions
     addProduct,
     updateProduct,
     deleteProduct,
     setFilters,
     resetFilters,
-    
-    // Getters
     getProductById,
     getFilteredProducts,
     getFeaturedProducts,
     getTrendingProducts,
     getNewArrivals,
-    getProductsByCategory,
-    getRelatedProducts,
     getProductStats,
     getCountryProducts
   };
