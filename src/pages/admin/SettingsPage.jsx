@@ -1,22 +1,25 @@
 import React, { useState, useEffect } from 'react';
 import { 
   Store, 
-  Share2, 
+  Share2, // Explicitly added the missing icon here
   Truck, 
   Save, 
-  Facebook, 
-  Twitter, 
-  Instagram, 
-  Youtube, 
-  Music, 
-  Image as ImageIcon, 
-  Linkedin, 
+  Layout, 
   Palette, 
+  Type, 
   Upload, 
   X, 
-  AlertCircle, 
-  CheckCircle, 
-  Clock 
+  Globe, 
+  ShieldCheck, 
+  Trash2, 
+  Plus, 
+  Facebook, 
+  Instagram, 
+  Twitter, 
+  Youtube, 
+  Link as LinkIcon, 
+  AlertCircle,
+  Edit
 } from 'lucide-react';
 import { useSettings } from '../../context/SettingsContext';
 import { useToast } from '../../components/common/Toast';
@@ -24,453 +27,272 @@ import Button from '../../components/common/Button';
 import { processImage } from '../../utils/imageUtils';
 
 const SettingsPage = () => {
-  const { 
-    settings, 
-    socialMediaPlatforms, 
-    saving, 
-    lastSaved, 
-    saveBrandingToServer, 
-    saveStoreInfoToServer, 
-    saveSocialMediaToServer, 
-    saveShippingToServer,
-    saveSettingsToServer // Added missing function import if used directly
-  } = useSettings();
+  const { settings, saveSettingsToServer, saving } = useSettings();
   const toast = useToast();
 
   const [activeTab, setActiveTab] = useState('branding');
-  const [saveMessage, setSaveMessage] = useState(null);
-  const [uploading, setUploading] = useState(false);
-  
-  const [storeForm, setStoreForm] = useState({
-    storeName: '',
-    storeEmail: '',
-    storePhone: '',
-    street: '',
-    city: '',
-    postcode: '',
-    country: ''
-  });
-
-  const [socialForm, setSocialForm] = useState({});
-  const [brandingForm, setBrandingForm] = useState({
-    logo: null,
-    fallbackText: '',
-    subText: ''
-  });
-
-  // Separate forms for multi-country shipping
-  const [shippingFormUK, setShippingFormUK] = useState({});
-  const [shippingFormIN, setShippingFormIN] = useState({});
+  const [formData, setFormData] = useState(null);
 
   useEffect(() => {
     if (settings) {
-      setStoreForm({
-        storeName: settings.storeName || '',
-        storeEmail: settings.storeEmail || '',
-        storePhone: settings.storePhone || '',
-        street: settings.storeAddress?.street || '',
-        city: settings.storeAddress?.city || '',
-        postcode: settings.storeAddress?.postcode || '',
-        country: settings.storeAddress?.country || ''
-      });
-      setSocialForm(settings.socialMedia || {});
-      setBrandingForm(settings.branding || {
-        logo: null,
-        fallbackText: 'Wonder',
-        subText: 'Fashions'
-      });
-      // Load separate shipping forms
-      setShippingFormUK(settings.countries?.uk?.shipping || settings.shipping || {});
-      setShippingFormIN(settings.countries?.india?.shipping || {});
+        const data = JSON.parse(JSON.stringify(settings));
+        if (!data.socialMediaList) data.socialMediaList = [];
+        if (!data.header) data.header = { announcement: '', showAnnouncement: true, sticky: true };
+        setFormData(data);
     }
   }, [settings]);
 
-  useEffect(() => {
-    if (saveMessage) {
-      const timer = setTimeout(() => {
-        setSaveMessage(null);
-      }, 10000);
-      return () => clearTimeout(timer);
+  const handleSave = async () => {
+    const res = await saveSettingsToServer(formData);
+    if (res.success) toast.success("Royal settings published successfully!");
+    else toast.error("Error: " + res.message);
+  };
+
+  const updateField = (path, value) => {
+    const keys = path.split('.');
+    const newData = { ...formData };
+    let current = newData;
+    for (let i = 0; i < keys.length - 1; i++) {
+      current[keys[i]] = { ...current[keys[i]] };
+      current = current[keys[i]];
     }
-  }, [saveMessage]);
-
-  const handleStoreChange = (e) => {
-    const { name, value } = e.target;
-    setStoreForm(prev => ({ ...prev, [name]: value }));
+    current[keys[keys.length - 1]] = value;
+    setFormData(newData);
   };
 
-  const handleSocialChange = (platform, field, value) => {
-    setSocialForm(prev => ({
-      ...prev,
-      [platform]: {
-        ...prev[platform],
-        [field]: value
-      }
-    }));
+  const addSocial = () => {
+    const newList = [...(formData.socialMediaList || [])];
+    newList.push({ id: Date.now().toString(), platform: 'instagram', url: '', enabled: true });
+    updateField('socialMediaList', newList);
   };
 
-  const handleBrandingChange = (e) => {
-    const { name, value } = e.target;
-    setBrandingForm(prev => ({ ...prev, [name]: value }));
-  };
-
-  const handleShippingChangeUK = (e) => {
-    const { name, value } = e.target;
-    setShippingFormUK(prev => ({ ...prev, [name]: parseFloat(value) || 0 }));
-  };
-
-  const handleShippingChangeIN = (e) => {
-    const { name, value } = e.target;
-    setShippingFormIN(prev => ({ ...prev, [name]: parseFloat(value) || 0 }));
+  const removeSocial = (id) => {
+    const newList = formData.socialMediaList.filter(s => s.id !== id);
+    updateField('socialMediaList', newList);
   };
 
   const handleLogoUpload = async (e) => {
     const file = e.target.files[0];
-    if (!file) return;
-
-    try {
-      setUploading(true);
-      const processedImage = await processImage(file);
-      setBrandingForm(prev => ({ ...prev, logo: processedImage }));
-      toast.success("Logo processed and ready to save!");
-    } catch (error) {
-      console.error("Logo upload failed", error);
-      toast.error("Failed to process logo. Try a different file.");
-    } finally {
-      setUploading(false);
-    }
-  };
-
-  const removeLogo = () => {
-    setBrandingForm(prev => ({ ...prev, logo: null }));
-  };
-
-  const saveStoreSettings = async () => {
-    const result = await saveStoreInfoToServer({
-      storeName: storeForm.storeName,
-      storeEmail: storeForm.storeEmail,
-      storePhone: storeForm.storePhone,
-      storeAddress: {
-        street: storeForm.street,
-        city: storeForm.city,
-        postcode: storeForm.postcode,
-        country: storeForm.country
+    if (file) {
+      try {
+        const b64 = await processImage(file);
+        updateField('branding.logo', b64);
+        toast.success("Logo uploaded!");
+      } catch (err) {
+        toast.error("Upload failed");
       }
-    });
-
-    if (result.success) {
-      toast.success('Store information saved!');
-      setSaveMessage({ type: 'success', text: result.message });
-    } else {
-      toast.error(result.message);
-      setSaveMessage({ type: 'error', text: result.message });
     }
   };
 
-  const saveSocialSettings = async () => {
-    const result = await saveSocialMediaToServer(socialForm);
-    if (result.success) {
-      toast.success('Social media settings saved!');
-      setSaveMessage({ type: 'success', text: result.message });
-    } else {
-      toast.error(result.message);
-      setSaveMessage({ type: 'error', text: result.message });
-    }
-  };
-
-  const saveShippingSettings = async () => {
-    try {
-      const updatedSettings = {
-        ...settings,
-        countries: {
-          ...settings.countries,
-          uk: {
-            ...settings.countries.uk,
-            shipping: shippingFormUK
-          },
-          india: {
-            ...settings.countries.india,
-            shipping: shippingFormIN
-          }
-        }
-      };
-      
-      const result = await saveSettingsToServer(updatedSettings);
-
-      if (result.success) {
-        toast.success('Shipping settings saved!');
-        setSaveMessage({ type: 'success', text: result.message });
-      } else {
-        toast.error(result.message);
-        setSaveMessage({ type: 'error', text: result.message });
-      }
-    } catch (error) {
-      console.error(error);
-      toast.error("Failed to save shipping settings");
-    }
-  };
-
-  const saveBrandingSettings = async () => {
-    const result = await saveBrandingToServer(brandingForm);
-    if (result.success) {
-      toast.success('Branding settings saved!');
-      setSaveMessage({ type: 'success', text: result.message });
-    } else {
-      toast.error(result.message);
-      setSaveMessage({ type: 'error', text: result.message });
-    }
-  };
-
-  const socialIcons = {
-    facebook: Facebook,
-    twitter: Twitter,
-    instagram: Instagram,
-    youtube: Youtube,
-    tiktok: Music,
-    pinterest: ImageIcon,
-    linkedin: Linkedin
-  };
-
-  const TabButton = ({ id, label, icon: Icon }) => (
-    <button
-      onClick={() => setActiveTab(id)}
-      className={`w-full flex items-center gap-3 px-4 py-3 text-left transition-colors border-l-4 ${
-        activeTab === id
-          ? 'bg-primary-50 text-primary-700 border-primary-600 font-medium'
-          : 'text-secondary-600 hover:bg-secondary-50 border-transparent'
-      }`}
-    >
-      <Icon size={20} />
-      {label}
-    </button>
-  );
+  if (!formData) return <div className="p-10 text-center font-display text-primary-900">Accessing Royal Archives...</div>;
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold text-secondary-900">Settings</h1>
-        <p className="text-secondary-500">Manage your store configuration</p>
+    <div className="space-y-6 pb-20 font-sans min-h-screen">
+      {/* Header Bar */}
+      <div className="flex justify-between items-center bg-white p-6 rounded-2xl shadow-sm border border-secondary-200">
+        <div>
+          <h1 className="text-2xl font-display font-bold text-primary-900 uppercase tracking-widest">Store Configuration</h1>
+          <p className="text-xs text-secondary-500 italic">Manage your brand's digital identity</p>
+        </div>
+        <Button onClick={handleSave} loading={saving} icon={Save} className="bg-primary-800 hover:bg-primary-900">Publish to Live Site</Button>
       </div>
 
-      {saveMessage && (
-        <div className={`p-4 rounded-lg flex items-start gap-3 animate-fade-in ${saveMessage.type === 'success' ? 'bg-green-50 border border-green-200' : 'bg-red-50 border border-red-200'}`}>
-          {saveMessage.type === 'success' ? <CheckCircle className="text-green-500 flex-shrink-0 mt-0.5" size={20} /> : <AlertCircle className="text-red-500 flex-shrink-0 mt-0.5" size={20} />}
-          <div className="flex-1">
-            <p className={`font-medium ${saveMessage.type === 'success' ? 'text-green-800' : 'text-red-800'}`}>
-              {saveMessage.type === 'success' ? 'Settings Saved!' : 'Error Saving Settings'}
-            </p>
-            <p className={`text-sm ${saveMessage.type === 'success' ? 'text-green-700' : 'text-red-700'}`}>{saveMessage.text}</p>
-            {saveMessage.type === 'success' && (
-              <div className="flex items-center gap-2 mt-2 text-sm text-green-600">
-                <Clock size={14} />
-                <span>Site will auto-rebuild. Changes visible in 1-2 minutes.</span>
-              </div>
-            )}
-          </div>
-          <button onClick={() => setSaveMessage(null)} className="text-secondary-400 hover:text-secondary-600"><X size={18} /></button>
-        </div>
-      )}
-
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-        <div className="lg:col-span-1">
-          <nav className="bg-white rounded-xl shadow-sm border border-secondary-100 overflow-hidden">
-            <TabButton id="branding" label="Branding & Logo" icon={Palette} />
-            <TabButton id="store" label="Store Information" icon={Store} />
-            <TabButton id="social" label="Social Media" icon={Share2} />
-            <TabButton id="shipping" label="Shipping & Delivery" icon={Truck} />
-          </nav>
-          {lastSaved && (
-            <div className="mt-4 p-3 bg-secondary-50 rounded-lg text-xs text-secondary-500">
-              <p>Last saved:</p>
-              <p className="font-medium text-secondary-700">{new Date(lastSaved).toLocaleString()}</p>
-            </div>
-          )}
+        {/* Navigation Sidebar */}
+        <div className="space-y-2">
+          {[
+            { id: 'branding', label: 'Identity', icon: Palette },
+            { id: 'header', label: 'Header', icon: Layout },
+            { id: 'footer', label: 'Footer', icon: Type },
+            { id: 'social', label: 'Social Links', icon: Share2 },
+            { id: 'policies', label: 'Policies', icon: ShieldCheck },
+            { id: 'shipping', label: 'Logistics', icon: Globe }
+          ].map(tab => (
+            <button 
+                key={tab.id} 
+                onClick={() => setActiveTab(tab.id)} 
+                className={`w-full flex items-center gap-3 px-5 py-4 rounded-xl text-left transition-all ${activeTab === tab.id ? 'bg-primary-800 text-white shadow-lg' : 'bg-white text-secondary-600 hover:bg-secondary-50 border border-secondary-100'}`}
+            >
+              <tab.icon size={18} /> 
+              <span className="text-xs font-bold uppercase tracking-widest">{tab.label}</span>
+            </button>
+          ))}
         </div>
 
         <div className="lg:col-span-3">
+          
+          {/* Identity Tab */}
           {activeTab === 'branding' && (
-            <div className="bg-white rounded-xl shadow-sm border border-secondary-100 p-6 space-y-6 animate-fade-in">
-              <div>
-                <h2 className="text-lg font-semibold text-secondary-900 mb-4 pb-2 border-b border-secondary-100">Store Branding</h2>
-                <div className="mb-8">
-                  <label className="label">Store Logo</label>
-                  <p className="text-xs text-secondary-500 mb-3">Upload your store logo. Any format accepted. Max 100MB (auto-compressed).</p>
-                  <div className="flex items-start gap-6">
-                    <div className="relative w-32 h-32 bg-secondary-50 border-2 border-dashed border-secondary-300 rounded-xl flex items-center justify-center overflow-hidden">
-                      {brandingForm.logo ? (
-                        <>
-                          <img src={brandingForm.logo} alt="Store Logo" className="w-full h-full object-contain p-2" />
-                          <button onClick={removeLogo} className="absolute top-1 right-1 p-1 bg-white rounded-full shadow-sm hover:bg-red-50 text-secondary-500 hover:text-red-500 transition-colors" type="button"><X size={14} /></button>
-                        </>
-                      ) : (
-                        <ImageIcon className="text-secondary-300" size={32} />
-                      )}
-                    </div>
-                    <div className="flex-1">
-                      <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-secondary-300 border-dashed rounded-xl cursor-pointer bg-secondary-50 hover:bg-secondary-100 transition-colors">
-                        <div className="flex flex-col items-center justify-center pt-5 pb-6">
-                          <Upload className="w-8 h-8 mb-3 text-secondary-400" />
-                          <p className="mb-2 text-sm text-secondary-500"><span className="font-semibold">Click to upload</span></p>
-                          <p className="text-xs text-secondary-500">Auto-compressed for performance</p>
+            <div className="bg-white rounded-2xl shadow-sm border border-secondary-200 p-8 space-y-8 animate-fade-in">
+                <h2 className="text-xl font-display font-bold text-primary-900 border-b pb-4 uppercase tracking-widest">Brand Identity</h2>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
+                    <div className="space-y-4">
+                        <label className="text-xs font-bold uppercase text-secondary-500">Logo Design</label>
+                        <div className="h-48 w-48 border-4 border-dashed border-secondary-100 rounded-2xl flex items-center justify-center relative overflow-hidden bg-secondary-50 group">
+                            {formData.branding?.logo ? (
+                                <>
+                                    <img src={formData.branding.logo} className="h-full w-full object-contain p-4" alt="Store Logo" />
+                                    <button onClick={() => updateField('branding.logo', null)} className="absolute top-2 right-2 bg-red-600 text-white p-1.5 rounded-full shadow-lg opacity-0 group-hover:opacity-100 transition-opacity"><X size={14}/></button>
+                                </>
+                            ) : (
+                                <div className="text-center"><Upload className="mx-auto text-secondary-300 mb-2" size={32} /><span className="text-[10px] font-bold text-secondary-400 uppercase">Click to Upload</span></div>
+                            )}
+                            <input type="file" className="absolute inset-0 opacity-0 cursor-pointer" onChange={handleLogoUpload} accept="image/*" />
                         </div>
-                        <input type="file" className="hidden" accept="image/*" onChange={handleLogoUpload} disabled={uploading} />
-                      </label>
                     </div>
-                  </div>
+                    <div className="space-y-6">
+                        <div><label className="label">Primary Store Name</label><input className="input" value={formData.branding?.fallbackText || ''} onChange={e => updateField('branding.fallbackText', e.target.value)} /></div>
+                        <div><label className="label">Tagline / Sub-text</label><input className="input" value={formData.branding?.subText || ''} onChange={e => updateField('branding.subText', e.target.value)} /></div>
+                    </div>
                 </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="space-y-1">
-                    <label className="label">Brand Name (Main)</label>
-                    <input type="text" name="fallbackText" value={brandingForm.fallbackText} onChange={handleBrandingChange} className="input" placeholder="Wonder" />
-                  </div>
-                  <div className="space-y-1">
-                    <label className="label">Brand Subtext (Optional)</label>
-                    <input type="text" name="subText" value={brandingForm.subText} onChange={handleBrandingChange} className="input" placeholder="Fashions" />
-                  </div>
-                </div>
+            </div>
+          )}
+
+          {/* Header Tab */}
+          {activeTab === 'header' && (
+            <div className="bg-white rounded-2xl shadow-sm border border-secondary-200 p-8 space-y-8 animate-fade-in">
+              <h2 className="text-xl font-display font-bold text-primary-900 border-b pb-4 uppercase tracking-widest">Header Bar</h2>
+              <div className="p-4 bg-secondary-50 rounded-xl border border-secondary-200 flex items-center justify-between">
+                <div><p className="font-bold text-primary-900 text-sm">Announcement Bar</p></div>
+                <label className="relative inline-flex items-center cursor-pointer">
+                  <input type="checkbox" checked={formData.header?.showAnnouncement} onChange={e => updateField('header.showAnnouncement', e.target.checked)} className="sr-only peer" />
+                  <div className="w-11 h-6 bg-gray-200 rounded-full peer peer-checked:after:translate-x-full peer-checked:bg-primary-800 after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all"></div>
+                </label>
               </div>
-              <div className="flex justify-end pt-4">
-                <Button variant="primary" onClick={saveBrandingSettings} icon={Save} loading={saving} disabled={saving || uploading}>{saving ? 'Saving...' : 'Save Branding'}</Button>
+              <div>
+                <label className="label">Message Text</label>
+                <input className="input" value={formData.header?.announcement || ''} onChange={e => updateField('header.announcement', e.target.value)} placeholder="Enter offer text..." />
               </div>
             </div>
           )}
 
-          {activeTab === 'store' && (
-            <div className="bg-white rounded-xl shadow-sm border border-secondary-100 p-6 space-y-6 animate-fade-in">
-              <div>
-                <h2 className="text-lg font-semibold text-secondary-900 mb-4 pb-2 border-b border-secondary-100">General Information</h2>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="space-y-1">
-                    <label className="label">Store Name</label>
-                    <input type="text" name="storeName" value={storeForm.storeName} onChange={handleStoreChange} className="input" />
-                  </div>
-                  <div className="space-y-1">
-                    <label className="label">Support Email</label>
-                    <input type="email" name="storeEmail" value={storeForm.storeEmail} onChange={handleStoreChange} className="input" />
-                  </div>
-                  <div className="space-y-1">
-                    <label className="label">Phone Number</label>
-                    <input type="text" name="storePhone" value={storeForm.storePhone} onChange={handleStoreChange} className="input" />
-                  </div>
-                </div>
-              </div>
-              <div>
-                <h2 className="text-lg font-semibold text-secondary-900 mb-4 pb-2 border-b border-secondary-100">Store Address</h2>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="md:col-span-2 space-y-1">
-                    <label className="label">Street Address</label>
-                    <input type="text" name="street" value={storeForm.street} onChange={handleStoreChange} className="input" />
-                  </div>
-                  <div className="space-y-1">
-                    <label className="label">City</label>
-                    <input type="text" name="city" value={storeForm.city} onChange={handleStoreChange} className="input" />
-                  </div>
-                  <div className="space-y-1">
-                    <label className="label">Postcode</label>
-                    <input type="text" name="postcode" value={storeForm.postcode} onChange={handleStoreChange} className="input" />
-                  </div>
-                  <div className="space-y-1">
-                    <label className="label">Country</label>
-                    <input type="text" name="country" value={storeForm.country} onChange={handleStoreChange} className="input" />
-                  </div>
-                </div>
-              </div>
-              <div className="flex justify-end pt-4">
-                <Button variant="primary" onClick={saveStoreSettings} icon={Save} loading={saving} disabled={saving}>{saving ? 'Saving...' : 'Save Changes'}</Button>
-              </div>
-            </div>
-          )}
-
+          {/* Social Media Tab */}
           {activeTab === 'social' && (
-            <div className="bg-white rounded-xl shadow-sm border border-secondary-100 p-6 space-y-6 animate-fade-in">
-              <h2 className="text-lg font-semibold text-secondary-900 mb-4 pb-2 border-b border-secondary-100">Social Media Links</h2>
-              <div className="space-y-6">
-                {socialMediaPlatforms.map((platform) => {
-                  const Icon = socialIcons[platform.id] || Share2;
-                  const isEnabled = socialForm[platform.id]?.enabled || false;
-                  return (
-                    <div key={platform.id} className="p-4 border border-secondary-200 rounded-lg bg-secondary-50/50">
-                      <div className="flex items-center justify-between mb-4">
-                        <div className="flex items-center gap-3">
-                          <div className={`p-2 rounded-lg ${isEnabled ? 'bg-primary-100 text-primary-600' : 'bg-secondary-200 text-secondary-500'}`}>
-                            <Icon size={20} />
-                          </div>
-                          <span className="font-medium text-secondary-900">{platform.name}</span>
-                        </div>
-                        <label className="relative inline-flex items-center cursor-pointer">
-                          <input type="checkbox" className="sr-only peer" checked={isEnabled} onChange={(e) => handleSocialChange(platform.id, 'enabled', e.target.checked)} />
-                          <div className="w-11 h-6 bg-secondary-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary-600"></div>
-                        </label>
-                      </div>
-                      {isEnabled && (
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 animate-fade-in">
-                          <div className="space-y-1">
-                            <label className="text-xs font-medium text-secondary-500">Profile URL</label>
-                            <input type="text" value={socialForm[platform.id]?.url || ''} onChange={(e) => handleSocialChange(platform.id, 'url', e.target.value)} placeholder={platform.placeholder} className="input text-sm py-2" />
-                          </div>
-                          <div className="space-y-1">
-                            <label className="text-xs font-medium text-secondary-500">Username / Handle (Optional)</label>
-                            <input type="text" value={socialForm[platform.id]?.username || ''} onChange={(e) => handleSocialChange(platform.id, 'username', e.target.value)} placeholder="@username" className="input text-sm py-2" />
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                  );
-                })}
+            <div className="bg-white rounded-2xl shadow-sm border border-secondary-200 p-8 space-y-6 animate-fade-in">
+              <div className="flex justify-between items-center border-b pb-4">
+                <h2 className="text-xl font-display font-bold text-primary-900 uppercase tracking-widest">Social Media</h2>
+                <Button size="sm" variant="outline" onClick={addSocial} icon={Plus}>Add Platform</Button>
               </div>
-              <div className="flex justify-end pt-4">
-                <Button variant="primary" onClick={saveSocialSettings} icon={Save} loading={saving} disabled={saving}>{saving ? 'Saving...' : 'Save Changes'}</Button>
+              <div className="space-y-4">
+                {formData.socialMediaList?.map((social, idx) => (
+                  <div key={social.id} className="p-4 border rounded-xl bg-secondary-50/50 flex items-center gap-4 relative group">
+                    <div className="flex-1">
+                      <select className="input py-1.5 text-sm bg-white" value={social.platform} onChange={e => {
+                        const newList = [...formData.socialMediaList];
+                        newList[idx].platform = e.target.value;
+                        updateField('socialMediaList', newList);
+                      }}>
+                        <option value="facebook">Facebook</option>
+                        <option value="instagram">Instagram</option>
+                        <option value="twitter">Twitter / X</option>
+                        <option value="youtube">Youtube</option>
+                        <option value="whatsapp">WhatsApp</option>
+                      </select>
+                    </div>
+                    <div className="flex-[2]">
+                      <input className="input py-1.5 text-sm" value={social.url} onChange={e => {
+                        const newList = [...formData.socialMediaList];
+                        newList[idx].url = e.target.value;
+                        updateField('socialMediaList', newList);
+                      }} placeholder="Link URL" />
+                    </div>
+                    <div className="flex items-center gap-4">
+                        <label className="relative inline-flex items-center cursor-pointer">
+                          <input type="checkbox" checked={social.enabled} onChange={e => {
+                            const newList = [...formData.socialMediaList];
+                            newList[idx].enabled = e.target.checked;
+                            updateField('socialMediaList', newList);
+                          }} className="sr-only peer" />
+                          <div className="w-10 h-5 bg-gray-200 rounded-full peer peer-checked:after:translate-x-full peer-checked:bg-green-600 after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all"></div>
+                        </label>
+                        <button onClick={() => removeSocial(social.id)} className="p-2 text-red-500 hover:bg-red-50 rounded-full"><Trash2 size={18}/></button>
+                    </div>
+                  </div>
+                ))}
               </div>
             </div>
           )}
 
+          {/* Footer Tab */}
+          {activeTab === 'footer' && (
+            <div className="bg-white rounded-2xl shadow-sm border border-secondary-200 p-8 space-y-8 animate-fade-in">
+              <h2 className="text-xl font-display font-bold text-primary-900 border-b pb-4 uppercase tracking-widest">Footer Content</h2>
+              <div>
+                <label className="label">About Us (Short)</label>
+                <textarea className="input h-24 italic" value={formData.footer?.aboutText} onChange={e => updateField('footer.aboutText', e.target.value)} />
+              </div>
+              <div className="space-y-4">
+                <div className="flex justify-between items-center"><label className="label">Menu Columns</label><Button size="sm" variant="outline" onClick={() => updateField('footer.columns', [...(formData.footer.columns || []), { title: 'New Column', links: [] }])}><Plus size={14}/> Add Column</Button></div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {formData.footer?.columns?.map((col, cIdx) => (
+                        <div key={cIdx} className="p-4 border rounded-xl bg-secondary-50 relative">
+                            <button onClick={() => updateField('footer.columns', formData.footer.columns.filter((_, i) => i !== cIdx))} className="absolute top-2 right-2 text-red-500"><X size={14}/></button>
+                            <input className="font-bold text-sm bg-transparent border-b mb-4 outline-none w-full" value={col.title} onChange={e => {
+                                const newCols = [...formData.footer.columns];
+                                newCols[cIdx].title = e.target.value;
+                                updateField('footer.columns', newCols);
+                            }} />
+                            <div className="space-y-2">
+                                {col.links?.map((link, lIdx) => (
+                                    <div key={lIdx} className="flex gap-2">
+                                        <input className="input py-1 px-2 text-[10px] flex-1" value={link.label} onChange={e => {
+                                            const newCols = [...formData.footer.columns];
+                                            newCols[cIdx].links[lIdx].label = e.target.value;
+                                            updateField('footer.columns', newCols);
+                                        }} />
+                                        <input className="input py-1 px-2 text-[10px] flex-1" value={link.url} onChange={e => {
+                                            const newCols = [...formData.footer.columns];
+                                            newCols[cIdx].links[lIdx].url = e.target.value;
+                                            updateField('footer.columns', newCols);
+                                        }} />
+                                        <button onClick={() => {
+                                            const newCols = [...formData.footer.columns];
+                                            newCols[cIdx].links = newCols[cIdx].links.filter((_, i) => i !== lIdx);
+                                            updateField('footer.columns', newCols);
+                                        }} className="text-secondary-400"><X size={12}/></button>
+                                    </div>
+                                ))}
+                                <button onClick={() => {
+                                    const newCols = [...formData.footer.columns];
+                                    newCols[cIdx].links.push({ label: 'New Link', url: '/shop' });
+                                    updateField('footer.columns', newCols);
+                                }} className="text-[10px] font-bold text-primary-700 uppercase">+ Add Link</button>
+                            </div>
+                        </div>
+                    ))}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Policies Tab */}
+          {activeTab === 'policies' && (
+            <div className="bg-white rounded-xl shadow-sm border border-secondary-200 p-8 space-y-6 animate-fade-in">
+              <h2 className="text-xl font-display font-bold text-primary-900 border-b pb-4 uppercase tracking-widest">Store Policies</h2>
+              <div><label className="label">Privacy Policy</label><textarea className="input h-64 font-sans text-sm" value={formData.policies?.privacy} onChange={e => updateField('policies.privacy', e.target.value)} /></div>
+              <div><label className="label">Terms & Conditions</label><textarea className="input h-64 font-sans text-sm" value={formData.policies?.terms} onChange={e => updateField('policies.terms', e.target.value)} /></div>
+            </div>
+          )}
+
+          {/* Shipping Tab */}
           {activeTab === 'shipping' && (
-            <div className="bg-white rounded-xl shadow-sm border border-secondary-100 p-6 space-y-8 animate-fade-in">
-              
-              {/* UK Shipping */}
-              <div>
-                <h2 className="text-lg font-semibold text-secondary-900 mb-4 pb-2 border-b border-secondary-100 flex items-center gap-2">
-                  <span className="text-2xl">🇬🇧</span> United Kingdom (GBP £)
-                </h2>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div className="space-y-1">
-                    <label className="label">Standard Shipping Cost (£)</label>
-                    <input type="number" name="standardShippingCost" value={shippingFormUK.standardShippingCost || 0} onChange={handleShippingChangeUK} step="0.01" min="0" className="input" />
-                  </div>
-                  <div className="space-y-1">
-                    <label className="label">Express Shipping Cost (£)</label>
-                    <input type="number" name="expressShippingCost" value={shippingFormUK.expressShippingCost || 0} onChange={handleShippingChangeUK} step="0.01" min="0" className="input" />
-                  </div>
-                  <div className="space-y-1">
-                    <label className="label">Free Shipping Threshold (£)</label>
-                    <input type="number" name="freeShippingThreshold" value={shippingFormUK.freeShippingThreshold || 0} onChange={handleShippingChangeUK} step="1" min="0" className="input" />
-                  </div>
+            <div className="bg-white rounded-xl shadow-sm border border-secondary-200 p-8 space-y-8 animate-fade-in">
+              <h2 className="text-xl font-display font-bold text-primary-900 border-b pb-4 uppercase tracking-widest">Global Logistics</h2>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="p-6 border rounded-2xl bg-secondary-50/50">
+                    <h3 className="font-bold mb-4 flex items-center gap-2">🇮🇳 India (₹)</h3>
+                    <div className="space-y-4">
+                        <div><label className="text-[10px] font-bold uppercase text-secondary-500">Free Delivery Min</label><input type="number" className="input" value={formData.countries?.india?.shipping?.freeShippingThreshold} onChange={e => updateField('countries.india.shipping.freeShippingThreshold', parseFloat(e.target.value))} /></div>
+                        <div><label className="text-[10px] font-bold uppercase text-secondary-500">Standard Cost</label><input type="number" className="input" value={formData.countries?.india?.shipping?.standardShippingCost} onChange={e => updateField('countries.india.shipping.standardShippingCost', parseFloat(e.target.value))} /></div>
+                    </div>
                 </div>
-              </div>
-
-              {/* India Shipping */}
-              <div>
-                <h2 className="text-lg font-semibold text-secondary-900 mb-4 pb-2 border-b border-secondary-100 flex items-center gap-2">
-                  <span className="text-2xl">🇮🇳</span> India (INR ₹)
-                </h2>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div className="space-y-1">
-                    <label className="label">Standard Shipping Cost (₹)</label>
-                    <input type="number" name="standardShippingCost" value={shippingFormIN.standardShippingCost || 0} onChange={handleShippingChangeIN} step="1" min="0" className="input" />
-                  </div>
-                  <div className="space-y-1">
-                    <label className="label">Express Shipping Cost (₹)</label>
-                    <input type="number" name="expressShippingCost" value={shippingFormIN.expressShippingCost || 0} onChange={handleShippingChangeIN} step="1" min="0" className="input" />
-                  </div>
-                  <div className="space-y-1">
-                    <label className="label">Free Shipping Threshold (₹)</label>
-                    <input type="number" name="freeShippingThreshold" value={shippingFormIN.freeShippingThreshold || 0} onChange={handleShippingChangeIN} step="1" min="0" className="input" />
-                  </div>
+                <div className="p-6 border rounded-2xl bg-secondary-50/50">
+                    <h3 className="font-bold mb-4 flex items-center gap-2">🇬🇧 UK (£)</h3>
+                    <div className="space-y-4">
+                        <div><label className="text-[10px] font-bold uppercase text-secondary-500">Free Delivery Min</label><input type="number" className="input" value={formData.countries?.uk?.shipping?.freeShippingThreshold} onChange={e => updateField('countries.uk.shipping.freeShippingThreshold', parseFloat(e.target.value))} /></div>
+                        <div><label className="text-[10px] font-bold uppercase text-secondary-500">Standard Cost</label><input type="number" className="input" value={formData.countries?.uk?.shipping?.standardShippingCost} onChange={e => updateField('countries.uk.shipping.standardShippingCost', parseFloat(e.target.value))} /></div>
+                    </div>
                 </div>
-              </div>
-
-              <div className="flex justify-end pt-4">
-                <Button variant="primary" onClick={saveShippingSettings} icon={Save} loading={saving} disabled={saving}>{saving ? 'Saving...' : 'Save All Changes'}</Button>
               </div>
             </div>
           )}

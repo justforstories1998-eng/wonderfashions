@@ -11,600 +11,140 @@ export const initialSettings = {
   splashScreen: {
     enabled: true,
     duration: 3000,
-    backgroundColor: '#7c3aed',
+    backgroundColor: '#771d1d',
     showTagline: true,
     tagline: 'Posh but Affordable'
   },
 
-  // Countries Configuration
+  // Header Logic
+  header: {
+    announcement: 'Direct from Manufacturer - No Middle Man | Posh but Affordable',
+    showAnnouncement: true,
+    sticky: true
+  },
+
+  // Footer Logic
+  footer: {
+    aboutText: 'Wonder Fashions brings you exquisite traditional wear directly from manufacturers. We offer posh styles at affordable prices.',
+    copyrightText: '© 2024 Wonder Fashions. All Rights Reserved.',
+    showNewsletter: true,
+    columns: [
+      {
+        title: "Shop Women",
+        links: [
+          { "label": "Sarees Collection", "url": "/shop?category=sarees" },
+          { "label": "Lehengas", "url": "/shop?category=lehenga" }
+        ]
+      },
+      {
+        title: "Support",
+        links: [
+          { "label": "Order Tracking", "url": "/order-history" },
+          { "label": "Privacy Policy", "url": "/privacy-policy" }
+        ]
+      }
+    ]
+  },
+
+  // Regional Config
   countries: {
     india: {
       enabled: true,
       name: 'India',
-      code: 'IN',
       flag: '🇮🇳',
-      currency: {
-        code: 'INR',
-        symbol: '₹',
-        name: 'Indian Rupee'
-      },
-      storeInfo: {
-        storeName: 'Wonder Fashions India',
-        storeEmail: 'india@wonderfashions.com',
-        storePhone: '+91 98765 43210',
-        storeAddress: {
-          street: '123 Fashion Street',
-          city: 'Mumbai',
-          state: 'Maharashtra',
-          postcode: '400001',
-          country: 'India'
-        }
-      },
-      shipping: {
-        freeShippingThreshold: 1999,
-        standardShippingCost: 99,
-        expressShippingCost: 199
-      },
-      tax: {
-        rate: 0.18,
-        name: 'GST'
-      }
+      currency: { code: 'INR', symbol: '₹' },
+      shipping: { freeShippingThreshold: 1999, standardShippingCost: 99 },
+      storeInfo: { storeEmail: 'india@wonderfashions.com', storePhone: '+91 9876543210', storeAddress: { street: 'Main Rd', city: 'Mumbai' } }
     },
     uk: {
       enabled: true,
       name: 'United Kingdom',
-      code: 'UK',
       flag: '🇬🇧',
-      currency: {
-        code: 'GBP',
-        symbol: '£',
-        name: 'British Pound'
-      },
-      storeInfo: {
-        storeName: 'Wonder Fashions UK',
-        storeEmail: 'uk@wonderfashions.com',
-        storePhone: '+44 (0) 20 1234 5678',
-        storeAddress: {
-          street: '123 Fashion Street',
-          city: 'London',
-          state: 'Greater London',
-          postcode: 'W1A 1AA',
-          country: 'United Kingdom'
-        }
-      },
-      shipping: {
-        freeShippingThreshold: 100,
-        standardShippingCost: 4.99,
-        expressShippingCost: 9.99
-      },
-      tax: {
-        rate: 0.20,
-        name: 'VAT'
-      }
+      currency: { code: 'GBP', symbol: '£' },
+      shipping: { freeShippingThreshold: 100, standardShippingCost: 4.99 },
+      storeInfo: { storeEmail: 'uk@wonderfashions.com', storePhone: '+44 20 1234 5678', storeAddress: { street: 'High St', city: 'London' } }
     }
   },
 
-  // Social Media Links
-  socialMedia: {
-    facebook: {
-      enabled: true,
-      url: 'https://facebook.com/wonderfashions',
-      username: 'wonderfashions'
-    },
-    twitter: {
-      enabled: true,
-      url: 'https://twitter.com/wonderfashions',
-      username: '@wonderfashions'
-    },
-    instagram: {
-      enabled: true,
-      url: 'https://instagram.com/wonderfashions',
-      username: '@wonderfashions'
-    },
-    youtube: {
-      enabled: false,
-      url: '',
-      username: ''
-    },
-    tiktok: {
-      enabled: false,
-      url: '',
-      username: ''
-    },
-    pinterest: {
-      enabled: false,
-      url: '',
-      username: ''
-    },
-    linkedin: {
-      enabled: false,
-      url: '',
-      username: ''
-    }
-  },
-
-  // Home Page Design
-  homeDesign: {
-    india: {
-      heroSlides: [
-        {
-          id: 'slide1',
-          title: 'Traditional Elegance',
-          subtitle: 'New Collection',
-          heading: 'Exquisite Sarees & Lehengas',
-          description: 'Direct from manufacturer. Posh styles at affordable prices.',
-          buttonText: 'Shop Sarees',
-          buttonLink: '/shop?category=sarees',
-          image: 'https://images.unsplash.com/photo-1583391733958-e02376e9ced3?w=1200',
-          align: 'left',
-          enabled: true,
-          order: 1
-        },
-        {
-          id: 'slide2',
-          title: 'Family Combos',
-          subtitle: 'Matching Styles',
-          heading: 'Mum & Daughter Sets',
-          description: 'Perfect matching outfits for special occasions.',
-          buttonText: 'View Collection',
-          buttonLink: '/shop?category=family-combo',
-          image: 'https://images.unsplash.com/photo-1610189012906-478338275202?w=1200',
-          align: 'right',
-          enabled: true,
-          order: 2
-        }
-      ],
-      sections: [
-        {
-          id: 'categories',
-          type: 'categories',
-          title: 'Shop by Category',
-          subtitle: 'Explore our wide range of fashion & jewelry',
-          enabled: true,
-          order: 1
-        },
-        {
-          id: 'featured',
-          type: 'featuredProducts',
-          title: 'Featured Collection',
-          subtitle: 'Handpicked styles just for you',
-          enabled: true,
-          order: 2
-        },
-        {
-          id: 'banner1',
-          type: 'promoBanner',
-          title: 'Bridal Collection',
-          subtitle: 'Make your special day unforgettable',
-          buttonText: 'Shop Bridal',
-          buttonLink: '/shop?category=bridal-sarees',
-          backgroundColor: '#db2777',
-          backgroundImage: null,
-          enabled: true,
-          order: 3
-        },
-        {
-          id: 'trending',
-          type: 'trendingProducts',
-          title: 'Trending Now',
-          subtitle: 'Customer favourites',
-          enabled: true,
-          order: 4
-        }
-      ],
-      features: [
-        {
-          id: 'manufacturer',
-          icon: 'Factory',
-          title: 'Direct from Manufacturer',
-          description: 'No middle man, best prices',
-          enabled: true
-        },
-        {
-          id: 'returns',
-          icon: 'RotateCcw',
-          title: 'Refund Guarantee',
-          description: '28 days refund policy',
-          enabled: true
-        },
-        {
-          id: 'support',
-          icon: 'Headphones',
-          title: '100% Support',
-          description: 'Customer satisfaction guaranteed',
-          enabled: true
-        },
-        {
-          id: 'quality',
-          icon: 'Award',
-          title: 'Posh & Affordable',
-          description: 'Premium quality for less',
-          enabled: true
-        }
-      ]
-    },
-    uk: {
-      heroSlides: [
-        {
-          id: 'slide1',
-          title: 'Fusion Wear',
-          subtitle: 'Indo-Western Styles',
-          heading: 'Celebrate in Style',
-          description: 'Authentic Indian wear for the modern UK lifestyle.',
-          buttonText: 'Shop Now',
-          buttonLink: '/shop',
-          image: 'https://images.unsplash.com/photo-1595341888016-a392ef81b7de?w=1200',
-          align: 'left',
-          enabled: true,
-          order: 1
-        },
-        {
-          id: 'slide2',
-          title: 'Jewellery Collection',
-          subtitle: 'German Silver & Gold Plated',
-          heading: 'Exquisite Accessories',
-          description: 'From bridal sets to daily wear earrings.',
-          buttonText: 'Shop Jewellery',
-          buttonLink: '/shop?category=jewelry',
-          image: 'https://images.unsplash.com/photo-1611591437281-460bfbe1220a?w=1200',
-          align: 'right',
-          enabled: true,
-          order: 2
-        }
-      ],
-      sections: [
-        {
-          id: 'categories',
-          type: 'categories',
-          title: 'Shop by Category',
-          subtitle: 'Traditional & Modern Styles',
-          enabled: true,
-          order: 1
-        },
-        {
-          id: 'featured',
-          type: 'featuredProducts',
-          title: 'Featured Collection',
-          subtitle: 'New arrivals in UK',
-          enabled: true,
-          order: 2
-        },
-        {
-          id: 'banner1',
-          type: 'promoBanner',
-          title: 'German Silver Items',
-          subtitle: 'Traditional decor and accessories',
-          buttonText: 'Explore',
-          buttonLink: '/shop?category=german-silver',
-          backgroundColor: '#0f766e',
-          backgroundImage: null,
-          enabled: true,
-          order: 3
-        },
-        {
-          id: 'trending',
-          type: 'trendingProducts',
-          title: 'Best Sellers',
-          subtitle: 'Most loved by our customers',
-          enabled: true,
-          order: 4
-        }
-      ],
-      features: [
-        {
-          id: 'manufacturer',
-          icon: 'Factory',
-          title: 'Direct from Manufacturer',
-          description: 'No middle man, best prices',
-          enabled: true
-        },
-        {
-          id: 'returns',
-          icon: 'RotateCcw',
-          title: 'Refund Guarantee',
-          description: '28 days refund policy',
-          enabled: true
-        },
-        {
-          id: 'support',
-          icon: 'Headphones',
-          title: '100% Support',
-          description: 'Customer satisfaction guaranteed',
-          enabled: true
-        },
-        {
-          id: 'quality',
-          icon: 'Award',
-          title: 'Posh & Affordable',
-          description: 'Premium quality for less',
-          enabled: true
-        }
-      ]
-    }
-  },
-
-  // Categories (Hierarchical)
+  // Content Lists
+  socialMediaList: [
+    { id: '1', platform: 'instagram', url: 'https://instagram.com', enabled: true },
+    { id: '2', platform: 'facebook', url: 'https://facebook.com', enabled: true }
+  ],
+  
   categories: [
     { 
-      id: 'women', 
-      name: 'Women', 
-      slug: 'women', 
-      image: null, 
-      enabled: true, 
-      order: 1,
+      id: 'women', name: 'Women', slug: 'women', enabled: true, order: 1,
       subcategories: [
-        { id: 'sarees', name: 'Sarees', slug: 'women-sarees' },
-        { id: 'lehenga', name: 'Lehenga', slug: 'women-lehenga' },
-        { id: 'kurtis', name: 'Kurtis & Gowns', slug: 'women-kurtis' },
-        { id: 'nighties', name: 'Nighties', slug: 'women-nighties' },
-        { id: 'blouses', name: 'Ready to Wear Blouses', slug: 'women-blouses' }
+        { id: 'sarees', name: 'Sarees', slug: 'sarees' },
+        { id: 'lehenga', name: 'Lehenga', slug: 'lehenga' },
+        { id: 'kurtis', name: 'Kurtis & Gowns', slug: 'kurtis' }
       ]
     },
     { 
-      id: 'sarees-special', 
-      name: 'Sarees Collection', 
-      slug: 'sarees', 
-      image: null, 
-      enabled: true, 
-      order: 2,
+      id: 'jewelry', name: 'Jewelry', slug: 'jewelry', enabled: true, order: 2,
       subcategories: [
-        { id: 'cotton', name: 'Cotton Sarees', slug: 'sarees-cotton' },
-        { id: 'silk', name: 'Silk Sarees', slug: 'sarees-silk' },
-        { id: 'semi-silk', name: 'Semi Silk', slug: 'sarees-semi-silk' },
-        { id: 'bridal', name: 'Bridal Sarees', slug: 'sarees-bridal' },
-        { id: 'ready-wear', name: 'Ready to Wear', slug: 'sarees-ready' },
-        { id: 'banarasi', name: 'Banarasi', slug: 'sarees-banarasi' }
+        { id: 'bangles', name: 'Bangles', slug: 'bangles' },
+        { id: 'necklaces', name: 'Necklace Sets', slug: 'necklaces' }
       ]
-    },
-    { 
-      id: 'men', 
-      name: 'Men', 
-      slug: 'men', 
-      image: null, 
-      enabled: true, 
-      order: 3,
-      subcategories: [
-        { id: 'men-kurtis', name: 'Kurtis', slug: 'men-kurtis' },
-        { id: 'shirts', name: 'Shirts', slug: 'men-shirts' },
-        { id: 'traditional', name: 'Traditional Wear', slug: 'men-traditional' }
-      ]
-    },
-    { 
-      id: 'kids', 
-      name: 'Kids', 
-      slug: 'kids', 
-      image: null, 
-      enabled: true, 
-      order: 4,
-      subcategories: [
-        { id: 'boys', name: 'Boys', slug: 'kids-boys' },
-        { id: 'girls', name: 'Girls', slug: 'kids-girls' }
-      ]
-    },
-    { 
-      id: 'combos', 
-      name: 'Family Combos', 
-      slug: 'combos', 
-      image: null, 
-      enabled: true, 
-      order: 5,
-      subcategories: [
-        { id: 'mum-daughter', name: 'Mum & Daughter', slug: 'combo-mum-daughter' },
-        { id: 'family-set', name: 'Full Family Set', slug: 'combo-family' }
-      ]
-    },
-    { 
-      id: 'jewelry', 
-      name: 'Jewellery', 
-      slug: 'jewelry', 
-      image: null, 
-      enabled: true, 
-      order: 6,
-      subcategories: [
-        { id: 'bangles', name: 'Bangles', slug: 'jewelry-bangles' },
-        { id: 'earrings', name: 'Ear Rings', slug: 'jewelry-earrings' },
-        { id: 'bracelets', name: 'Bracelets', slug: 'jewelry-bracelets' },
-        { id: 'chains', name: 'Dollar Chains', slug: 'jewelry-chains' },
-        { id: 'anklets', name: 'Anklets', slug: 'jewelry-anklets' },
-        { id: 'hip-belts', name: 'Hip Belts', slug: 'jewelry-hip-belts' },
-        { id: 'bridal-sets', name: 'Bridal Sets', slug: 'jewelry-bridal' },
-        { id: 'dance-sets', name: 'Bharatanatyam Sets', slug: 'jewelry-dance' },
-        { id: 'necklaces', name: 'Necklace Sets', slug: 'jewelry-necklaces' },
-        { id: 'german-silver', name: 'German Silver', slug: 'jewelry-german-silver' }
-      ]
-    },
-    { 
-      id: 'accessories', 
-      name: 'Accessories', 
-      slug: 'accessories', 
-      image: null, 
-      enabled: true, 
-      order: 7,
-      subcategories: []
     }
   ],
 
-  // Products (per country)
-  products: {
-    india: [],
-    uk: []
+  policies: {
+    privacy: "# Privacy Policy\nYour data is safe...",
+    terms: "# Terms & Conditions\n28 days refund guarantee..."
   },
 
-  // Orders (per country)
-  orders: {
-    india: [],
-    uk: []
+  products: { india: [], uk: [] },
+  
+  homeDesign: {
+    india: { heroSlides: [], sections: [], features: [] },
+    uk: { heroSlides: [], sections: [], features: [] }
   }
 };
 
-// Social Media Platforms Configuration
+// Required for Admin Selectors
 export const socialMediaPlatforms = [
-  {
-    id: 'facebook',
-    name: 'Facebook',
-    placeholder: 'https://facebook.com/yourpage',
-    icon: 'Facebook'
-  },
-  {
-    id: 'twitter',
-    name: 'Twitter / X',
-    placeholder: 'https://twitter.com/yourhandle',
-    icon: 'Twitter'
-  },
-  {
-    id: 'instagram',
-    name: 'Instagram',
-    placeholder: 'https://instagram.com/yourhandle',
-    icon: 'Instagram'
-  },
-  {
-    id: 'youtube',
-    name: 'YouTube',
-    placeholder: 'https://youtube.com/@yourchannel',
-    icon: 'Youtube'
-  },
-  {
-    id: 'tiktok',
-    name: 'TikTok',
-    placeholder: 'https://tiktok.com/@yourhandle',
-    icon: 'Music'
-  },
-  {
-    id: 'pinterest',
-    name: 'Pinterest',
-    placeholder: 'https://pinterest.com/yourprofile',
-    icon: 'Image'
-  },
-  {
-    id: 'linkedin',
-    name: 'LinkedIn',
-    placeholder: 'https://linkedin.com/company/yourcompany',
-    icon: 'Linkedin'
-  }
+  { id: 'facebook', name: 'Facebook', icon: 'Facebook' },
+  { id: 'instagram', name: 'Instagram', icon: 'Instagram' },
+  { id: 'twitter', name: 'Twitter', icon: 'Twitter' },
+  { id: 'youtube', name: 'Youtube', icon: 'Youtube' },
+  { id: 'whatsapp', name: 'WhatsApp', icon: 'MessageCircle' }
 ];
 
-// Available Section Types for Home Design
 export const sectionTypes = [
-  {
-    id: 'categories',
-    type: 'categories',
-    name: 'Categories Grid',
-    description: 'Display product categories in a grid layout',
-    icon: 'Grid'
-  },
-  {
-    id: 'featuredProducts',
-    type: 'featuredProducts',
-    name: 'Featured Products',
-    description: 'Showcase featured products',
-    icon: 'Star'
-  },
-  {
-    id: 'trendingProducts',
-    type: 'trendingProducts',
-    name: 'Trending Products',
-    description: 'Display trending/popular products',
-    icon: 'TrendingUp'
-  },
-  {
-    id: 'newArrivals',
-    type: 'newArrivals',
-    name: 'New Arrivals',
-    description: 'Show newly added products',
-    icon: 'Sparkles'
-  },
-  {
-    id: 'promoBanner',
-    type: 'promoBanner',
-    name: 'Promotional Banner',
-    description: 'Full-width promotional banner with CTA',
-    icon: 'Megaphone'
-  },
-  {
-    id: 'imageGallery',
-    type: 'imageGallery',
-    name: 'Image Gallery',
-    description: 'Display multiple images in a gallery',
-    icon: 'Images'
-  },
-  {
-    id: 'textBlock',
-    type: 'textBlock',
-    name: 'Text Block',
-    description: 'Custom text content section',
-    icon: 'Type'
-  }
+  { id: 'categories', type: 'categories', name: 'Categories Grid' },
+  { id: 'featuredProducts', type: 'featuredProducts', name: 'Featured Products' },
+  { id: 'promoBanner', type: 'promoBanner', name: 'Promo Banner' }
 ];
 
-// Available Icons for Features - Updated with Factory
+// THE MISSING EXPORT THAT CAUSED THE ERROR
 export const featureIcons = [
-  { id: 'Factory', name: 'Manufacturer' },
-  { id: 'Truck', name: 'Shipping Truck' },
+  { id: 'Truck', name: 'Shipping' },
   { id: 'RotateCcw', name: 'Returns' },
-  { id: 'Shield', name: 'Security Shield' },
-  { id: 'Headphones', name: 'Support Headphones' },
-  { id: 'CreditCard', name: 'Credit Card' },
-  { id: 'Clock', name: 'Clock' },
-  { id: 'Gift', name: 'Gift' },
-  { id: 'Heart', name: 'Heart' },
-  { id: 'Star', name: 'Star' },
-  { id: 'Award', name: 'Award' },
-  { id: 'Zap', name: 'Lightning' },
-  { id: 'Package', name: 'Package' }
+  { id: 'Shield', name: 'Security' },
+  { id: 'Headphones', name: 'Support' },
+  { id: 'Award', name: 'Quality' },
+  { id: 'Factory', name: 'Manufacturer' }
 ];
 
-// Default Hero Slide Template
 export const defaultHeroSlide = {
   id: '',
-  title: '',
-  subtitle: '',
-  heading: '',
-  description: '',
+  heading: 'New Collection',
+  description: 'Exquisite traditional wear',
   buttonText: 'Shop Now',
   buttonLink: '/shop',
-  image: null,
-  backgroundColor: '#7c3aed',
-  textColor: '#ffffff',
-  align: 'left',
-  enabled: true,
-  order: 0
-};
-
-// Default Section Template
-export const defaultSection = {
-  id: '',
-  type: 'featuredProducts',
-  title: 'Section Title',
-  subtitle: 'Section subtitle goes here',
-  enabled: true,
-  order: 0,
-  // For promo banner
-  buttonText: 'Shop Now',
-  buttonLink: '/shop',
-  backgroundColor: '#7c3aed',
-  backgroundImage: null
-};
-
-// Default Feature Template
-export const defaultFeature = {
-  id: '',
-  icon: 'Truck',
-  title: 'Feature Title',
-  description: 'Feature description',
+  image: '',
   enabled: true
 };
 
-// Default Category Template
-export const defaultCategory = {
+export const defaultSection = {
   id: '',
-  name: '',
-  slug: '',
-  image: null,
+  type: 'featuredProducts',
+  title: 'Collection Title',
+  subtitle: 'Handpicked for you',
   enabled: true,
-  order: 0
+  backgroundColor: '#771d1d'
 };
 
-// Generate unique ID
-export const generateId = () => {
-  return `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-};
+export const generateId = () => Math.random().toString(36).substr(2, 9);

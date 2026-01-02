@@ -1,62 +1,51 @@
-import React, { useState, useEffect } from 'react';
-import { Link, useLocation, useNavigate } from 'react-router-dom';
+import React, { useState, useEffect, useRef } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import { 
-  ShoppingBag, 
-  Menu, 
-  X, 
-  Search, 
-  Heart, 
-  User,
-  ChevronDown,
-  ChevronRight
+  ShoppingBag, Menu, X, Search, User, Heart, 
+  ChevronDown, PackageSearch, Globe, ArrowRight 
 } from 'lucide-react';
 import { useCart } from '../../context/CartContext';
 import { useProducts } from '../../context/ProductContext';
 import { useSettings } from '../../context/SettingsContext';
+import { useCountry } from '../../context/CountryContext';
 
 const Navbar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [activeCategory, setActiveCategory] = useState(null); // For desktop hover
-  const [mobileExpandedCategory, setMobileExpandedCategory] = useState(null); // For mobile click
   const [isScrolled, setIsScrolled] = useState(false);
-  const [isSearchOpen, setIsSearchOpen] = useState(false);
-  const [searchQuery, setSearchQuery] = useState('');
-
-  const location = useLocation();
-  const navigate = useNavigate();
+  const [searchTerm, setSearchTerm] = useState('');
+  const [searchResults, setSearchResults] = useState([]);
+  const [showSearchList, setShowSearchList] = useState(false);
+  
   const { totalItems } = useCart();
-  const { categories, setFilters } = useProducts();
+  const { categories, setFilters, getCountryProducts } = useProducts();
   const { settings } = useSettings();
+  const { selectedCountry, changeCountry, getAvailableCountries } = useCountry();
+  
+  const navigate = useNavigate();
+  const searchRef = useRef(null);
 
-  // Handle scroll effect
   useEffect(() => {
-    const handleScroll = () => {
-      setIsScrolled(window.scrollY > 50);
-    };
-
+    const handleScroll = () => setIsScrolled(window.scrollY > 20);
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  // Close mobile menu on route change
+  // Real-time search logic
   useEffect(() => {
-    setIsMenuOpen(false);
-    setIsSearchOpen(false);
-    setMobileExpandedCategory(null);
-  }, [location]);
-
-  // Handle search submit
-  const handleSearchSubmit = (e) => {
-    e.preventDefault();
-    if (searchQuery.trim()) {
-      setFilters({ searchQuery: searchQuery.trim() });
-      navigate('/shop');
-      setIsSearchOpen(false);
-      setSearchQuery('');
+    if (searchTerm.trim().length > 1) {
+      const products = getCountryProducts();
+      const filtered = products.filter(p => 
+        p.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        p.category.toLowerCase().includes(searchTerm.toLowerCase())
+      ).slice(0, 5);
+      setSearchResults(filtered);
+      setShowSearchList(true);
+    } else {
+      setSearchResults([]);
+      setShowSearchList(false);
     }
-  };
+  }, [searchTerm, getCountryProducts]);
 
-  // Handle category click (Main or Sub)
   const handleCategoryClick = (categorySlug, subcategorySlug = null) => {
     const filterSlug = subcategorySlug || categorySlug;
     setFilters({ category: filterSlug });
@@ -65,269 +54,140 @@ const Navbar = () => {
   };
 
   return (
-    <>
-      <nav
-        className={`
-          fixed top-0 left-0 right-0 z-50 transition-all duration-300 border-b-2 border-secondary-200
-          ${isScrolled 
-            ? 'bg-secondary-50 shadow-lg py-2' 
-            : 'bg-secondary-50/95 backdrop-blur-sm py-4'
-          }
-        `}
-      >
-        <div className="container-custom">
-          <div className="flex items-center justify-between">
-            {/* Logo */}
-            <Link 
-              to="/" 
-              className="flex items-center gap-2 group"
-            >
-              {settings.branding?.logo ? (
-                <img 
-                  src={settings.branding.logo} 
-                  alt={settings.storeName} 
-                  className="h-12 w-auto object-contain drop-shadow-sm group-hover:scale-105 transition-transform"
-                />
-              ) : (
-                <div className="w-10 h-10 bg-primary-800 rounded-full flex items-center justify-center border-2 border-secondary-400">
-                  <span className="text-secondary-100 font-display font-bold text-xl">
-                    {settings.branding?.fallbackText?.[0] || 'W'}
-                  </span>
-                </div>
-              )}
-              
-              <div className="hidden sm:block">
-                <h1 className="text-2xl font-display font-bold text-primary-900 leading-none tracking-wide">
-                  {settings.branding?.fallbackText || 'Wonder'}
-                </h1>
-                {settings.branding?.subText && (
-                  <p className="text-[10px] text-secondary-700 font-medium tracking-[0.2em] uppercase">
-                    {settings.branding.subText}
-                  </p>
-                )}
-              </div>
-            </Link>
-
-            {/* Desktop Navigation */}
-            <div className="hidden lg:flex items-center gap-8">
-              <Link 
-                to="/" 
-                className="text-sm font-medium text-secondary-800 hover:text-primary-700 uppercase tracking-wide transition-colors"
-              >
-                Home
-              </Link>
-              
-              {/* Dynamic Categories */}
-              {categories.slice(0, 6).map((category) => (
-                <div 
-                  key={category.id} 
-                  className="relative group h-full flex items-center"
-                  onMouseEnter={() => setActiveCategory(category.id)}
-                  onMouseLeave={() => setActiveCategory(null)}
-                >
-                  <button
-                    onClick={() => handleCategoryClick(category.slug)}
-                    className="flex items-center gap-1 text-sm font-medium text-secondary-800 hover:text-primary-700 uppercase tracking-wide py-4"
-                  >
-                    {category.name}
-                    {category.subcategories && category.subcategories.length > 0 && (
-                      <ChevronDown size={14} />
-                    )}
-                  </button>
-
-                  {/* Dropdown Menu */}
-                  {category.subcategories && category.subcategories.length > 0 && (
-                    <div className="absolute top-full left-0 w-56 bg-white rounded-b-lg shadow-xl border-t-4 border-primary-700 py-3 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 transform translate-y-2 group-hover:translate-y-0 z-50">
-                      {category.subcategories.map((sub) => (
-                        <button
-                          key={sub.id}
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleCategoryClick(category.slug, sub.slug);
-                          }}
-                          className="w-full text-left px-5 py-2.5 text-sm text-secondary-600 hover:bg-secondary-50 hover:text-primary-800 transition-colors font-sans border-l-2 border-transparent hover:border-primary-600"
-                        >
-                          {sub.name}
-                        </button>
-                      ))}
-                    </div>
-                  )}
-                </div>
+    <header className="fixed top-0 left-0 right-0 z-[100] transition-all duration-300 shadow-2xl">
+      
+      {/* LAYER 1: TOP BLACK BAR (Region & Contact) */}
+      <div className="bg-[#000000] text-[#C5A059] py-2 border-b border-[#C5A059]/20">
+        <div className="container-custom flex justify-between items-center text-[10px] font-bold uppercase tracking-[0.2em]">
+          
+          {/* Region Switcher */}
+          <div className="relative group cursor-pointer flex items-center gap-2">
+            <Globe size={12} className="text-[#C5A059]" />
+            <span className="text-white/60">Region:</span>
+            <span className="flex items-center gap-1 text-[#FDFCF0]">
+              {selectedCountry?.flag} {selectedCountry?.name} <ChevronDown size={10} />
+            </span>
+            <div className="absolute top-full left-0 mt-1 w-44 bg-[#0D0D0D] shadow-2xl rounded-lg border border-[#C5A059]/30 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all py-2 z-[120]">
+              {getAvailableCountries().map(c => (
+                <button key={c.code} onClick={() => changeCountry(c.code)} className={`w-full text-left px-5 py-3 text-[10px] uppercase tracking-widest border-b border-white/5 last:border-0 hover:bg-[#C5A059] hover:text-black transition-colors ${selectedCountry?.code === c.code ? 'text-[#C5A059]' : 'text-gray-400'}`}>
+                  {c.flag} {c.name}
+                </button>
               ))}
             </div>
-
-            {/* Right Side Icons */}
-            <div className="flex items-center gap-3">
-              {/* Search Button */}
-              <button
-                onClick={() => setIsSearchOpen(!isSearchOpen)}
-                className="p-2 text-primary-900 hover:bg-secondary-200 rounded-full transition-all duration-300"
-                aria-label="Search"
-              >
-                <Search size={22} />
-              </button>
-
-              {/* Wishlist */}
-              <Link
-                to="/wishlist"
-                className="hidden sm:flex p-2 text-primary-900 hover:bg-secondary-200 rounded-full transition-all duration-300"
-                aria-label="Wishlist"
-              >
-                <Heart size={22} />
-              </Link>
-
-              {/* Cart */}
-              <Link
-                to="/cart"
-                className="relative p-2 text-primary-900 hover:bg-secondary-200 rounded-full transition-all duration-300"
-                aria-label="Cart"
-              >
-                <ShoppingBag size={22} />
-                {totalItems > 0 && (
-                  <span className="absolute -top-1 -right-1 w-5 h-5 bg-primary-700 text-white text-[10px] font-bold rounded-full flex items-center justify-center border border-white">
-                    {totalItems > 9 ? '9+' : totalItems}
-                  </span>
-                )}
-              </Link>
-
-              {/* Admin Link (Desktop Only) */}
-              <Link
-                to="/admin"
-                className="hidden sm:flex p-2 text-primary-900 hover:bg-secondary-200 rounded-full transition-all duration-300"
-                aria-label="Admin"
-              >
-                <User size={22} />
-              </Link>
-
-              {/* Mobile Menu Button */}
-              <button
-                onClick={() => setIsMenuOpen(!isMenuOpen)}
-                className="lg:hidden p-2 text-primary-900 hover:bg-secondary-200 rounded-full transition-all duration-300"
-                aria-label="Menu"
-              >
-                {isMenuOpen ? <X size={24} /> : <Menu size={24} />}
-              </button>
-            </div>
           </div>
 
-          {/* Search Bar */}
-          {isSearchOpen && (
-            <div className="mt-4 animate-slide-down pb-2">
-              <form onSubmit={handleSearchSubmit} className="relative">
-                <input
-                  type="text"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder="Search for sarees, jewelry..."
-                  className="w-full px-4 py-3 pl-12 bg-white border-2 border-secondary-200 rounded-full focus:outline-none focus:ring-0 focus:border-primary-600 font-sans shadow-inner"
-                  autoFocus
-                />
-                <Search 
-                  size={20} 
-                  className="absolute left-4 top-1/2 -translate-y-1/2 text-secondary-400" 
-                />
-                <button
-                  type="button"
-                  onClick={() => setIsSearchOpen(false)}
-                  className="absolute right-4 top-1/2 -translate-y-1/2 text-secondary-400 hover:text-primary-600"
-                >
-                  <X size={20} />
-                </button>
-              </form>
-            </div>
-          )}
+          <div className="hidden lg:block text-white/50 tracking-[0.3em]">
+            {settings.header?.announcement}
+          </div>
+
+          <div className="flex items-center gap-6">
+            <Link to="/order-history" className="text-white/60 hover:text-white transition-colors">My Orders</Link>
+            <Link to="/admin" className="bg-[#C5A059] text-black px-3 py-1 rounded font-black">Admin</Link>
+          </div>
         </div>
+      </div>
 
-        {/* Mobile Menu */}
-        {isMenuOpen && (
-          <div className="lg:hidden bg-white border-t border-secondary-100 animate-slide-down h-[calc(100vh-70px)] overflow-y-auto">
-            <div className="container-custom py-4 space-y-1">
-              <Link
-                to="/"
-                className="block px-4 py-3 rounded-lg text-sm font-medium text-secondary-700 hover:bg-secondary-50"
-              >
-                Home
-              </Link>
-              <Link
-                to="/shop"
-                className="block px-4 py-3 rounded-lg text-sm font-medium text-secondary-700 hover:bg-secondary-50"
-              >
-                Shop All
-              </Link>
+      {/* LAYER 2: BRANDING & SEARCH (Dark Maroon/Charcoal) */}
+      <nav className={`bg-[#1A0505] text-[#FDFCF0] transition-all duration-500 border-b border-[#C5A059]/10 ${isScrolled ? 'py-2' : 'py-6'}`}>
+        <div className="container-custom flex items-center justify-between">
+          
+          {/* 1. Mobile Menu Button */}
+          <button onClick={() => setIsMenuOpen(true)} className="lg:hidden p-2 text-[#C5A059]">
+            <Menu size={28} />
+          </button>
 
-              {/* Mobile Categories */}
-              <div className="border-t border-secondary-100 mt-2 pt-2">
-                <p className="px-4 py-2 text-xs font-semibold text-secondary-500 uppercase tracking-wider font-sans">
-                  Categories
-                </p>
-                {categories.map((category) => (
-                  <div key={category.id}>
-                    <div 
-                      className="flex items-center justify-between px-4 py-3 rounded-lg hover:bg-secondary-50 cursor-pointer"
-                      onClick={() => {
-                        if (category.subcategories && category.subcategories.length > 0) {
-                          setMobileExpandedCategory(mobileExpandedCategory === category.id ? null : category.id);
-                        } else {
-                          handleCategoryClick(category.slug);
-                        }
-                      }}
-                    >
-                      <span className="text-sm font-medium text-secondary-700">{category.name}</span>
-                      {category.subcategories && category.subcategories.length > 0 && (
-                        <ChevronRight 
-                          size={16} 
-                          className={`text-secondary-400 transition-transform duration-300 ${mobileExpandedCategory === category.id ? 'rotate-90' : ''}`} 
-                        />
-                      )}
-                    </div>
-
-                    {/* Mobile Subcategories Accordion */}
-                    {mobileExpandedCategory === category.id && category.subcategories && (
-                      <div className="bg-secondary-50 px-4 py-2 space-y-1 animate-fade-in">
-                        <button
-                          onClick={() => handleCategoryClick(category.slug)}
-                          className="block w-full text-left py-2 text-sm font-medium text-primary-600"
-                        >
-                          View All {category.name}
-                        </button>
-                        {category.subcategories.map((sub) => (
-                          <button
-                            key={sub.id}
-                            onClick={() => handleCategoryClick(category.slug, sub.slug)}
-                            className="block w-full text-left py-2 text-sm text-secondary-600 hover:text-primary-600 pl-4 border-l border-secondary-200"
-                          >
-                            {sub.name}
-                          </button>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                ))}
+          {/* 2. LOGO AREA (Highly Visible) */}
+          <Link to="/" className="flex items-center gap-4 group">
+            {settings.branding?.logo ? (
+              <img src={settings.branding.logo} alt="Logo" className="h-14 w-auto object-contain transition-transform group-hover:scale-105" />
+            ) : (
+              <div className="w-12 h-12 bg-[#C5A059] rounded-full flex items-center justify-center border-2 border-white shadow-xl">
+                <span className="text-[#1A0505] font-display font-bold text-2xl">{settings.branding?.fallbackText?.[0] || 'W'}</span>
               </div>
-
-              {/* Mobile Admin Link */}
-              <div className="border-t border-secondary-100 mt-2 pt-2">
-                <Link
-                  to="/admin"
-                  className="flex items-center gap-3 px-4 py-3 text-sm font-medium text-secondary-700 hover:bg-secondary-50 rounded-lg"
-                >
-                  <User size={18} />
-                  Admin Panel
-                </Link>
-              </div>
+            )}
+            <div className="flex flex-col">
+              <h1 className="text-2xl md:text-3xl font-display font-bold text-white tracking-wider leading-none uppercase">
+                {settings.branding?.fallbackText || 'WONDER'}
+              </h1>
+              <span className="text-[10px] text-[#C5A059] font-black tracking-[0.5em] mt-1 uppercase">
+                {settings.branding?.subText || 'FASHIONS'}
+              </span>
             </div>
+          </Link>
+
+          {/* 3. REAL-TIME SEARCH (Spacious) */}
+          <div className="hidden lg:block flex-1 max-w-md mx-10 relative" ref={searchRef}>
+             <div className="relative">
+                <input 
+                  type="text" 
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  placeholder="Search Saree, Jewelry..." 
+                  className="w-full bg-black/40 border border-[#C5A059]/40 text-white rounded-full py-2.5 px-12 text-xs focus:border-[#C5A059] focus:bg-black/60 outline-none transition-all"
+                />
+                <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-[#C5A059]" size={16} />
+             </div>
+
+             {/* Search Results List */}
+             {showSearchList && (
+               <div className="absolute top-full left-0 right-0 mt-3 bg-[#1A1A1A] border border-[#C5A059]/30 rounded-2xl shadow-2xl overflow-hidden animate-fade-in z-[130]">
+                  {searchResults.length > 0 ? (
+                    searchResults.map(p => (
+                      <button key={p.id} onClick={() => { navigate(`/product/${p.id}`); setShowSearchList(false); setSearchTerm(''); }} className="w-full flex items-center gap-4 p-4 hover:bg-white/5 text-left border-b border-white/5 last:border-0 transition-colors">
+                         <img src={p.image} className="w-10 h-10 object-cover rounded-lg border border-[#C5A059]/20" alt="" />
+                         <div>
+                            <p className="text-xs font-bold text-white uppercase tracking-wider">{p.name}</p>
+                            <p className="text-[9px] text-[#C5A059] font-bold uppercase">{p.category}</p>
+                         </div>
+                         <ArrowRight size={14} className="ml-auto text-white/20" />
+                      </button>
+                    ))
+                  ) : (
+                    <div className="p-10 text-center">
+                        <PackageSearch size={32} className="mx-auto text-gray-700 mb-2" />
+                        <p className="text-xs text-gray-500 uppercase tracking-widest">Not available in archives</p>
+                    </div>
+                  )}
+               </div>
+             )}
           </div>
-        )}
+
+          {/* 4. CART ICON */}
+          <div className="flex items-center gap-2">
+            <Link to="/cart" className="relative p-3 text-[#C5A059] hover:bg-white/5 rounded-full transition-all">
+              <ShoppingBag size={28} strokeWidth={1.5} />
+              {totalItems > 0 && (
+                <span className="absolute top-2 right-2 bg-white text-black text-[10px] w-5 h-5 rounded-full flex items-center justify-center font-black border-2 border-[#1A0505]">
+                    {totalItems}
+                </span>
+              )}
+            </Link>
+          </div>
+        </div>
       </nav>
 
-      {/* Overlay for mobile menu */}
-      {isMenuOpen && (
-        <div
-          className="fixed inset-0 z-40 bg-black/20 lg:bg-transparent top-[70px]"
-          onClick={() => setIsMenuOpen(false)}
-        />
-      )}
-    </>
+      {/* LAYER 3: CATEGORIES MENU (Clean White) */}
+      <div className={`hidden lg:flex justify-center bg-white shadow-md border-b border-gray-100 transition-all duration-500 overflow-hidden ${isScrolled ? 'h-0' : 'h-12'}`}>
+        <div className="flex items-center gap-10">
+            {categories?.map((cat) => (
+                <div key={cat.id} className="relative group h-full flex items-center">
+                    <button onClick={() => handleCategoryClick(cat.slug)} className="text-[11px] font-bold text-gray-600 hover:text-[#1A0505] uppercase tracking-[0.2em] transition-colors border-b-2 border-transparent hover:border-[#C5A059] py-1">
+                        {cat.name}
+                    </button>
+                    {cat.subcategories?.length > 0 && (
+                        <div className="absolute top-full left-1/2 -translate-x-1/2 pt-2 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300">
+                            <div className="bg-white shadow-2xl border border-gray-100 w-52 py-4 rounded-xl flex flex-col z-[150]">
+                                {cat.subcategories.map(sub => (
+                                    <button key={sub.id} onClick={() => handleCategoryClick(cat.slug, sub.slug)} className="px-6 py-2.5 text-[10px] font-bold text-gray-400 hover:text-black hover:bg-gray-50 text-left uppercase tracking-widest transition-colors">{sub.name}</button>
+                                ))}
+                            </div>
+                        </div>
+                    )}
+                </div>
+            ))}
+        </div>
+      </div>
+    </header>
   );
 };
 
