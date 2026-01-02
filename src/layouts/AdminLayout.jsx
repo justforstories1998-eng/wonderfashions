@@ -10,21 +10,18 @@ const AdminLayout = () => {
   const { isAuthenticated, loading } = useAuth();
   const location = useLocation();
 
-  // Show loading state while checking authentication
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-secondary-50">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600"></div>
+      <div className="flex items-center justify-center min-h-screen bg-[#FDFCF0]">
+        <div className="w-12 h-12 border-4 border-[#C5A059] border-t-[#4A0404] rounded-full animate-spin"></div>
       </div>
     );
   }
 
-  // Redirect to login if not authenticated
   if (!isAuthenticated && location.pathname !== '/admin/login') {
     return <Navigate to="/admin/login" state={{ from: location }} replace />;
   }
 
-  // If on login page, don't show layout
   if (location.pathname === '/admin/login') {
     return (
       <ToastProvider>
@@ -34,22 +31,17 @@ const AdminLayout = () => {
   }
 
   return (
-    <div className="flex h-screen bg-secondary-50 overflow-hidden">
+    <div className="flex h-screen bg-[#F9F8F0] overflow-hidden font-sans">
       <ToastProvider position="top-right">
-        {/* Sidebar */}
-        <AdminSidebar 
-          isOpen={sidebarOpen} 
-          onClose={() => setSidebarOpen(false)} 
-        />
+        <AdminSidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
 
-        {/* Main Content Wrapper */}
-        <div className="flex flex-col flex-1 w-0 overflow-hidden lg:ml-64 transition-all duration-300">
-          {/* Header */}
+        <div className="flex flex-col flex-1 w-0 overflow-hidden lg:ml-64 transition-all duration-500">
           <AdminHeader onSidebarOpen={() => setSidebarOpen(true)} />
 
-          {/* Main Content */}
-          <main className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8">
-            <Outlet />
+          <main className="flex-1 overflow-y-auto p-4 md:p-10 hide-scrollbar bg-mandala">
+            <div className="max-w-7xl mx-auto">
+                <Outlet />
+            </div>
           </main>
         </div>
       </ToastProvider>
